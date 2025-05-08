@@ -1,41 +1,86 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useBranding } from '../../context/BrandingContext';
 
 const BrandingManager = () => {
   const { branding, updateBranding } = useBranding();
-  const [institutionName, setInstitutionName] = useState(branding.institutionName);
-  const [previewLogo, setPreviewLogo] = useState(branding.logo);
+  const [institutionName, setInstitutionName] = useState('');
+  const [previewLogo, setPreviewLogo] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleNameChange = (e) => {
+  // Initialize form with context values when component mounts or context changes
+  useEffect(() => {
+    setInstitutionName(branding.institutionName || '');
+    setPreviewLogo(branding.logo || null);
+  }, [branding]);
+
+  const handleNameChange = useCallback((e) => {
     setInstitutionName(e.target.value);
-  };
+  }, []);
 
-  const handleLogoChange = (e) => {
+  const handleLogoChange = useCallback((e) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewLogo(reader.result);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      setErrorMessage('Logo image is too large. Maximum size is 2MB.');
+      return;
     }
-  };
 
-  const handleSaveSettings = () => {
-    updateBranding({
-      institutionName,
-      logo: previewLogo,
-    });
-    setSuccessMessage('Branding settings updated successfully!');
-    setTimeout(() => {
-      setSuccessMessage('');
-    }, 3000);
-  };
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/svg+xml', 'image/gif'];
+    if (!validTypes.includes(file.type)) {
+      setErrorMessage('Invalid file type. Please upload a JPEG, PNG, SVG, or GIF image.');
+      return;
+    }
 
-  const handleRemoveLogo = () => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewLogo(reader.result);
+      setErrorMessage('');
+    };
+    reader.onerror = () => {
+      setErrorMessage('Error reading file. Please try again.');
+    };
+    reader.readAsDataURL(file);
+  }, []);
+
+  const handleSaveSettings = useCallback(async () => {
+    setIsLoading(true);
+    setErrorMessage('');
+    setSuccessMessage('');
+
+    try {
+      await updateBranding({
+        institutionName,
+        logo: previewLogo,
+      });
+      setSuccessMessage('Branding settings updated successfully!');
+      
+      // Auto-dismiss success message after 3 seconds
+      const timer = setTimeout(() => {
+        setSuccessMessage('');
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    } catch (error) {
+      setErrorMessage(`Failed to update branding: ${error.message || 'Unknown error'}`);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [institutionName, previewLogo, updateBranding]);
+
+  const handleRemoveLogo = useCallback(() => {
     setPreviewLogo(null);
-  };
+  }, []);
+
+  const handleResetToDefault = useCallback(() => {
+    setInstitutionName('DigiClass');
+    setPreviewLogo(null);
+    setErrorMessage('');
+  }, []);
 
   return (
     <div className="branding-manager">
@@ -43,6 +88,10 @@ const BrandingManager = () => {
       
       {successMessage && (
         <div className="success-message">{successMessage}</div>
+      )}
+
+      {errorMessage && (
+        <div className="error-message">{errorMessage}</div>
       )}
 
       <div className="branding-form">
@@ -54,6 +103,7 @@ const BrandingManager = () => {
             value={institutionName}
             onChange={handleNameChange}
             placeholder="Enter your institution name"
+            disabled={isLoading}
           />
           <p className="help-text">This name will appear throughout the application</p>
         </div>
@@ -64,7 +114,13 @@ const BrandingManager = () => {
             {previewLogo ? (
               <div className="logo-preview">
                 <img src={previewLogo} alt="Institution Logo" />
-                <button type="button" onClick={handleRemoveLogo}>Remove Logo</button>
+                <button 
+                  type="button" 
+                  onClick={handleRemoveLogo}
+                  disabled={isLoading}
+                >
+                  Remove Logo
+                </button>
               </div>
             ) : (
               <div className="logo-placeholder">No logo uploaded</div>
@@ -73,22 +129,26 @@ const BrandingManager = () => {
               type="file"
               accept="image/*"
               onChange={handleLogoChange}
+              disabled={isLoading}
             />
             <p className="help-text">Recommended size: 200x60 pixels, PNG or SVG with transparent background</p>
           </div>
         </div>
 
         <div className="action-buttons">
-          <button type="button" className="primary-btn" onClick={handleSaveSettings}>
-            Save Branding Settings
+          <button 
+            type="button" 
+            className="primary-btn" 
+            onClick={handleSaveSettings}
+            disabled={isLoading}
+          >
+            {isLoading ? 'Saving...' : 'Save Branding Settings'}
           </button>
           <button 
             type="button" 
             className="reset-btn"
-            onClick={() => {
-              setInstitutionName('DigiClass');
-              setPreviewLogo(null);
-            }}
+            onClick={handleResetToDefault}
+            disabled={isLoading}
           >
             Reset to Default
           </button>
@@ -111,4 +171,4 @@ const BrandingManager = () => {
   );
 };
 
-export default BrandingManager; 
+export default React.memo(BrandingManager); 

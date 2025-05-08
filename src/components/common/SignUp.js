@@ -1,34 +1,64 @@
-import React, { useState } from 'react';
-import { Link, Navigate } from 'react-router-dom';
+import React, { useState, useCallback, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useBranding } from '../../context/BrandingContext';
+import { useAuth } from '../../context/AuthContext';
 
 const SignUp = () => {
   const { branding } = useBranding();
+  const { register } = useAuth();
+  
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'student',
-    authCode: ''
+    role: ''
   });
   
   const [errors, setErrors] = useState({});
-  const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
 
-  const handleChange = (e) => {
+  const handleChange = useCallback((e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
       [name]: value
-    });
-  };
+    }));
+    
+    // Clear error for this field when typing after an error
+    if (submitAttempted && errors[name]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+  }, [errors, submitAttempted]);
 
-  const validateForm = () => {
+  const handleSelectRole = useCallback((role) => {
+    setFormData(prev => ({
+      ...prev,
+      role
+    }));
+    
+    // Clear role error if exists
+    if (errors.role) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.role;
+        return newErrors;
+      });
+    }
+  }, [errors]);
+
+  const validateForm = useCallback(() => {
     const newErrors = {};
     
     if (!formData.fullName.trim()) {
       newErrors.fullName = 'Full name is required';
+    } else if (formData.fullName.trim().length < 2) {
+      newErrors.fullName = 'Full name must be at least 2 characters';
     }
     
     if (!formData.email.trim()) {
@@ -41,38 +71,73 @@ const SignUp = () => {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
+    } else if (!/[A-Za-z]/.test(formData.password) || !/[0-9]/.test(formData.password)) {
+      newErrors.password = 'Password must contain both letters and numbers';
     }
     
-    if (formData.password !== formData.confirmPassword) {
+    if (!formData.confirmPassword) {
+      newErrors.confirmPassword = 'Please confirm your password';
+    } else if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match';
     }
     
-    if (formData.role === 'teacher' && !formData.authCode) {
-      newErrors.authCode = 'Authorization code is required for teachers';
+    if (!formData.role) {
+      newErrors.role = 'Please select your role';
     }
     
-    return newErrors;
-  };
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  }, [formData]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
-    const validationErrors = validateForm();
+    setSubmitAttempted(true);
     
-    if (Object.keys(validationErrors).length === 0) {
-      // Form is valid, submit
-      console.log('Form submitted successfully', formData);
-      setIsSubmitted(true);
-      setErrors({});
-    } else {
-      // Form has errors
-      setErrors(validationErrors);
+    if (validateForm()) {
+      setIsLoading(true);
+      
+      try {
+        // Submit to backend using AuthContext
+        const userData = {
+          fullName: formData.fullName,
+          email: formData.email,
+          password: formData.password,
+          role: formData.role
+        };
+        
+        await register(userData);
+        // Redirect will be handled by the AuthContext and PublicRoute
+      } catch (error) {
+        setErrors({ 
+          submit: error.message || 'Registration failed. Please try again.' 
+        });
+      } finally {
+        setIsLoading(false);
+      }
     }
-  };
+  }, [formData, register, validateForm]);
 
-  if (isSubmitted) {
-    // Redirect to login page after successful signup
-    return <Navigate to="/" />;
-  }
+  // Memoize role options to prevent re-renders
+  const roleOptions = useMemo(() => [
+    {
+      id: 'student',
+      title: 'Student',
+      description: 'Join classes, take exams, view grades',
+      iconClass: 'student'
+    },
+    {
+      id: 'teacher',
+      title: 'Teacher',
+      description: 'Create classes, assignments, exams',
+      iconClass: 'teacher'
+    },
+    {
+      id: 'admin',
+      title: 'Administrator',
+      description: 'Manage users, subjects, system settings',
+      iconClass: 'admin'
+    }
+  ], []);
 
   return (
     <div className="signup-container">
@@ -86,89 +151,112 @@ const SignUp = () => {
         )}
         <h2>Create Your {branding.institutionName} Account</h2>
       </div>
-      <form onSubmit={handleSubmit}>
-        <div className="role-selector">
-          <button 
-            type="button" 
-            className={formData.role === 'student' ? 'active' : ''} 
-            onClick={() => setFormData({...formData, role: 'student'})}
-          >
-            Student
-          </button>
-          <button 
-            type="button" 
-            className={formData.role === 'teacher' ? 'active' : ''} 
-            onClick={() => setFormData({...formData, role: 'teacher'})}
-          >
-            Teacher
-          </button>
+      
+      {errors.submit && (
+        <div className="error-message">{errors.submit}</div>
+      )}
+      
+      <form onSubmit={handleSubmit} className="signup-form">
+        <div className="form-section">
+          <h3>Select Your Role</h3>
+          <div className="role-selector">
+            {roleOptions.map(role => (
+              <div 
+                key={role.id}
+                className={`role-option ${formData.role === role.id ? 'selected' : ''}`}
+                onClick={() => handleSelectRole(role.id)}
+              >
+                <div className={`role-icon ${role.iconClass}`}></div>
+                <div className="role-title">{role.title}</div>
+                <div className="role-description">{role.description}</div>
+              </div>
+            ))}
+          </div>
+          {errors.role && <span className="error">{errors.role}</span>}
         </div>
         
-        <div className="form-group">
-          <input
-            type="text"
-            name="fullName"
-            placeholder="Full Name"
-            value={formData.fullName}
-            onChange={handleChange}
-          />
-          {errors.fullName && <span className="error">{errors.fullName}</span>}
-        </div>
-        
-        <div className="form-group">
-          <input
-            type="email"
-            name="email"
-            placeholder="Email Address"
-            value={formData.email}
-            onChange={handleChange}
-          />
-          {errors.email && <span className="error">{errors.email}</span>}
-        </div>
-        
-        <div className="form-group">
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-          />
-          {errors.password && <span className="error">{errors.password}</span>}
-        </div>
-        
-        <div className="form-group">
-          <input
-            type="password"
-            name="confirmPassword"
-            placeholder="Confirm Password"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-          />
-          {errors.confirmPassword && <span className="error">{errors.confirmPassword}</span>}
-        </div>
-        
-        {formData.role === 'teacher' && (
+        <div className="form-section">
+          <h3>Personal Information</h3>
+          
           <div className="form-group">
+            <label htmlFor="fullName">Full Name</label>
             <input
               type="text"
-              name="authCode"
-              placeholder="Teacher Authorization Code"
-              value={formData.authCode}
+              id="fullName"
+              name="fullName"
+              placeholder="Enter your full name"
+              value={formData.fullName}
               onChange={handleChange}
+              className={errors.fullName ? 'input-error' : ''}
+              disabled={isLoading}
             />
-            {errors.authCode && <span className="error">{errors.authCode}</span>}
-            <p className="auth-note">
-              * Teachers must use an authorization code provided by the administrator
-            </p>
+            {errors.fullName && <span className="error">{errors.fullName}</span>}
           </div>
-        )}
+          
+          <div className="form-group">
+            <label htmlFor="email">Email Address</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="Enter your email address"
+              value={formData.email}
+              onChange={handleChange}
+              className={errors.email ? 'input-error' : ''}
+              disabled={isLoading}
+            />
+            {errors.email && <span className="error">{errors.email}</span>}
+          </div>
+        </div>
         
-        <button type="submit" className="signup-btn">Create Account</button>
-        <p>Already have an account? <Link to="/">Login</Link></p>
+        <div className="form-section">
+          <h3>Create Password</h3>
+          
+          <div className="form-group">
+            <label htmlFor="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Create password (min. 6 characters)"
+              value={formData.password}
+              onChange={handleChange}
+              className={errors.password ? 'input-error' : ''}
+              disabled={isLoading}
+            />
+            {errors.password && <span className="error">{errors.password}</span>}
+          </div>
+          
+          <div className="form-group">
+            <label htmlFor="confirmPassword">Confirm Password</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              placeholder="Confirm your password"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              className={errors.confirmPassword ? 'input-error' : ''}
+              disabled={isLoading}
+            />
+            {errors.confirmPassword && <span className="error">{errors.confirmPassword}</span>}
+          </div>
+        </div>
+        
+        <button 
+          type="submit" 
+          className="signup-btn"
+          disabled={isLoading}
+        >
+          {isLoading ? 'Creating Account...' : 'Create Account'}
+        </button>
+        
+        <p className="login-link">
+          Already have an account? <Link to="/">Login</Link>
+        </p>
       </form>
     </div>
   );
 };
 
-export default SignUp; 
+export default React.memo(SignUp); 

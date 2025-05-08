@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import { useBranding } from '../../context/BrandingContext';
 import SystemSettings from './SystemSettings';
+import BrandingManager from './BrandingManager';
+import InstituteManagement from './InstituteManagement';
+import '../../styles/AdminDashboard.css';
+import '../../styles/InstituteManagement.css';
 
 // Admin-specific components
 const AdminHome = () => (
@@ -305,91 +309,97 @@ const TeacherAuthorization = () => {
 
 const AdminDashboard = () => {
   const { branding } = useBranding();
-  const [notifications, setNotifications] = useState([
-    { id: 1, text: 'New teacher registration request', read: false },
-    { id: 2, text: 'System update available', read: false }
-  ]);
-  const [showProfile, setShowProfile] = useState(false);
-  const [profileData, setProfileData] = useState({
-    name: 'Admin User',
-    bio: 'System Administrator',
-    photo: null
-  });
+  const [activeSection, setActiveSection] = useState('home');
+
+  const renderContent = () => {
+    switch (activeSection) {
+      case 'home':
+        return <AdminHome />;
+      case 'users':
+        return <UserManagement />;
+      case 'courses':
+        return <CourseManagement />;
+      case 'teachers':
+        return <TeacherAuthorization />;
+      case 'institutes':
+        return <InstituteManagement />;
+      case 'branding':
+        return <BrandingManager />;
+      case 'system':
+        return <SystemSettings />;
+      default:
+        return <AdminHome />;
+    }
+  };
 
   return (
-    <div className="dashboard admin-dashboard">
-      <header className="dashboard-header">
-        <h2>{branding.institutionName} - Admin Portal</h2>
-        <div className="header-actions">
-          <div className="notifications">
-            <span className="notification-icon">🔔</span>
-            {notifications.length > 0 && (
-              <span className="notification-badge">{notifications.length}</span>
-            )}
-          </div>
-          <div className="profile-icon" onClick={() => setShowProfile(!showProfile)}>
-            <img src={profileData.photo || 'https://via.placeholder.com/50'} alt="Profile" />
-          </div>
-        </div>
-      </header>
-
-      <div className="dashboard-content">
-        <nav className="sidebar">
+    <div className="admin-dashboard">
+      <div className="admin-sidebar">
+        <div className="sidebar-header">
           {branding.logo && (
-            <div className="sidebar-logo">
-              <img src={branding.logo} alt={`${branding.institutionName} Logo`} />
-            </div>
+            <img src={branding.logo} alt="School Logo" className="school-logo" />
           )}
+          <h2>{branding.institutionName} Admin</h2>
+        </div>
+
+        <nav className="sidebar-nav">
           <ul>
-            <li><Link to="/admin">Dashboard</Link></li>
-            <li><Link to="/admin/users">User Management</Link></li>
-            <li><Link to="/admin/courses">Course Management</Link></li>
-            <li><Link to="/admin/teacher-auth">Teacher Authorization</Link></li>
-            <li><Link to="/admin/settings">System Settings</Link></li>
-            <li><Link to="/logout">Logout</Link></li>
+            <li 
+              className={activeSection === 'home' ? 'active' : ''}
+              onClick={() => setActiveSection('home')}
+            >
+              <span className="nav-icon">📊</span>
+              Dashboard
+            </li>
+            <li 
+              className={activeSection === 'institutes' ? 'active' : ''}
+              onClick={() => setActiveSection('institutes')}
+            >
+              <span className="nav-icon">🏫</span>
+              Institute Management
+            </li>
+            <li 
+              className={activeSection === 'users' ? 'active' : ''}
+              onClick={() => setActiveSection('users')}
+            >
+              <span className="nav-icon">👥</span>
+              User Management
+            </li>
+            <li 
+              className={activeSection === 'courses' ? 'active' : ''}
+              onClick={() => setActiveSection('courses')}
+            >
+              <span className="nav-icon">📚</span>
+              Course Management
+            </li>
+            <li 
+              className={activeSection === 'teachers' ? 'active' : ''}
+              onClick={() => setActiveSection('teachers')}
+            >
+              <span className="nav-icon">👨‍🏫</span>
+              Teacher Authorization
+            </li>
+            <li 
+              className={activeSection === 'branding' ? 'active' : ''}
+              onClick={() => setActiveSection('branding')}
+            >
+              <span className="nav-icon">🎨</span>
+              Branding
+            </li>
+            <li 
+              className={activeSection === 'system' ? 'active' : ''}
+              onClick={() => setActiveSection('system')}
+            >
+              <span className="nav-icon">⚙️</span>
+              System Settings
+            </li>
           </ul>
         </nav>
-
-        <main className="main-content">
-          <Routes>
-            <Route path="/" element={<AdminHome />} />
-            <Route path="/users" element={<UserManagement />} />
-            <Route path="/courses" element={<CourseManagement />} />
-            <Route path="/teacher-auth" element={<TeacherAuthorization />} />
-            <Route path="/settings" element={<SystemSettings />} />
-          </Routes>
-        </main>
       </div>
 
-      {showProfile && (
-        <div className="profile-modal">
-          <h3>Edit Profile</h3>
-          <input
-            type="text"
-            name="name"
-            value={profileData.name}
-            onChange={(e) => setProfileData({...profileData, name: e.target.value})}
-            placeholder="Name"
-          />
-          <textarea
-            name="bio"
-            value={profileData.bio}
-            onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
-            placeholder="Bio"
-          />
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => {
-              const file = e.target.files[0];
-              if (file) {
-                setProfileData({...profileData, photo: URL.createObjectURL(file)});
-              }
-            }}
-          />
-          <button onClick={() => setShowProfile(false)}>Close</button>
-        </div>
-      )}
+      <div className="admin-content">
+        {renderContent()}
+      </div>
     </div>
   );
 };

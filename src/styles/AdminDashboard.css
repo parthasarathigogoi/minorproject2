@@ -1,0 +1,239 @@
+/* Admin Dashboard Styles */
+.admin-dashboard {
+  display: flex;
+  height: 100vh;
+  background-color: #f5f7f9;
+}
+
+/* Sidebar Styles */
+.admin-sidebar {
+  width: 260px;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+}
+
+.sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid #e1e5e9;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.sidebar-header h2 {
+  font-size: 16px;
+  font-weight: 600;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.school-logo {
+  max-width: 120px;
+  max-height: 60px;
+  margin-bottom: 10px;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 20px 0;
+  overflow-y: auto;
+}
+
+.sidebar-nav ul {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-nav li {
+  padding: 12px 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  color: #5c6370;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.sidebar-nav li:hover {
+  background-color: rgba(53, 99, 233, 0.05);
+  color: #3563e9;
+}
+
+.sidebar-nav li.active {
+  background-color: rgba(53, 99, 233, 0.1);
+  color: #3563e9;
+  border-left: 3px solid #3563e9;
+}
+
+.nav-icon {
+  margin-right: 10px;
+  font-size: 16px;
+}
+
+/* Content Area */
+.admin-content {
+  flex: 1;
+  padding: 20px;
+  margin-left: 260px;
+  overflow-y: auto;
+}
+
+/* Welcome Section & Quick Stats */
+.welcome-section {
+  margin-bottom: 30px;
+}
+
+.welcome-section h3 {
+  font-size: 22px;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.quick-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.stat-card {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.stat-card h4 {
+  font-size: 14px;
+  color: #5c6370;
+  margin-bottom: 10px;
+}
+
+.stat-card p {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.stat-card p.healthy {
+  color: #00c853;
+}
+
+/* Admin Actions */
+.admin-actions {
+  margin-bottom: 30px;
+}
+
+.admin-actions h3 {
+  font-size: 18px;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.action-btn {
+  background-color: #fff;
+  border: 1px solid #e1e5e9;
+  border-radius: 6px;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #3563e9;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  background-color: #3563e9;
+  color: #fff;
+  border-color: #3563e9;
+}
+
+/* Recent Activity */
+.recent-activity {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.recent-activity h3 {
+  font-size: 18px;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.activity-item {
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e1e5e9;
+}
+
+.activity-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.activity-item p {
+  margin: 0 0 5px 0;
+  font-size: 14px;
+}
+
+.activity-item span {
+  font-size: 12px;
+  color: #8d9297;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-sidebar {
+    width: 60px;
+    overflow: hidden;
+  }
+  
+  .admin-sidebar:hover {
+    width: 260px;
+  }
+  
+  .sidebar-header h2 {
+    display: none;
+  }
+  
+  .sidebar-header:hover h2 {
+    display: block;
+  }
+  
+  .nav-icon {
+    margin-right: 20px;
+  }
+  
+  .sidebar-nav li span:not(.nav-icon) {
+    display: none;
+  }
+  
+  .admin-sidebar:hover .sidebar-nav li span:not(.nav-icon) {
+    display: inline;
+  }
+  
+  .admin-content {
+    margin-left: 60px;
+  }
+} 

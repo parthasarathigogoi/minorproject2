@@ -1,0 +1,805 @@
+.assignment-manager {
+  width: 100%;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.assignments-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background-color: #fff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.assignments-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #111827;
+}
+
+.filter-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.class-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.class-filter label {
+  font-size: 14px;
+  color: #4b5563;
+}
+
+.class-filter select {
+  padding: 6px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #111827;
+  background-color: #fff;
+}
+
+.create-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.create-btn:hover {
+  background-color: #2563eb;
+}
+
+.tab-navigation {
+  display: flex;
+  background-color: #fff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0 20px;
+}
+
+.tab-btn {
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #6b7280;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tab-btn:hover {
+  color: #111827;
+}
+
+.tab-btn.active {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+  font-weight: 500;
+}
+
+.assignments-content {
+  padding: 20px;
+  min-height: 400px;
+}
+
+.assignments-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.assignment-card {
+  background-color: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.assignment-card:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.assignment-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.assignment-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #111827;
+}
+
+.status-badge {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-badge svg {
+  margin-right: 4px;
+  font-size: 10px;
+}
+
+.status-badge.submitted {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.status-badge.pending {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge.late {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.status-badge.completed {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.assignment-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.detail-item svg {
+  margin-right: 4px;
+  font-size: 12px;
+}
+
+.assignment-footer {
+  border-top: 1px solid #f3f4f6;
+  padding-top: 12px;
+  margin-top: 8px;
+}
+
+.teacher-stats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.submission-count, .graded-count {
+  display: flex;
+  align-items: center;
+}
+
+.submission-count svg, .graded-count svg {
+  margin-right: 6px;
+  font-size: 12px;
+}
+
+.student-action {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.view-btn {
+  padding: 6px 12px;
+  background-color: #f3f4f6;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.view-btn:hover {
+  background-color: #e5e7eb;
+}
+
+.grade-display {
+  font-size: 14px;
+  font-weight: 500;
+  color: #059669;
+}
+
+/* Assignment details view */
+.assignment-details {
+  background-color: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.teacher-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  padding: 6px 12px;
+  background-color: #f3f4f6;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-btn svg {
+  margin-right: 6px;
+}
+
+.action-btn:hover {
+  background-color: #e5e7eb;
+}
+
+.action-btn.danger {
+  color: #b91c1c;
+}
+
+.action-btn.danger:hover {
+  background-color: #fee2e2;
+}
+
+.action-btn.primary {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.action-btn.primary:hover {
+  background-color: #bfdbfe;
+}
+
+.assignment-info {
+  padding: 20px;
+}
+
+.assignment-info h3 {
+  margin: 0 0 16px;
+  font-size: 1.5rem;
+  color: #111827;
+}
+
+.assignment-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.meta-item svg {
+  margin-right: 6px;
+}
+
+.assignment-description {
+  margin-bottom: 24px;
+}
+
+.assignment-description h4 {
+  margin: 0 0 12px;
+  font-size: 16px;
+  color: #111827;
+}
+
+.assignment-description p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #4b5563;
+}
+
+.assignment-attachments {
+  margin-bottom: 24px;
+}
+
+.assignment-attachments h4 {
+  margin: 0 0 12px;
+  font-size: 16px;
+  color: #111827;
+}
+
+.attachments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.attachment-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background-color: #f9fafb;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.file-icon {
+  font-size: 16px;
+  color: #6b7280;
+  margin-right: 8px;
+}
+
+.file-name {
+  flex: 1;
+  color: #111827;
+}
+
+.file-size {
+  color: #6b7280;
+  margin: 0 8px;
+}
+
+.download-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.download-btn:hover {
+  background-color: #f3f4f6;
+  color: #3b82f6;
+}
+
+/* Student submission section */
+.submission-section {
+  margin-bottom: 24px;
+}
+
+.submission-section h4 {
+  margin: 0 0 12px;
+  font-size: 16px;
+  color: #111827;
+}
+
+.submission-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background-color: #f9fafb;
+  border-radius: 8px;
+}
+
+.submission-meta {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.grade-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.grade-value {
+  font-size: 16px;
+  font-weight: 500;
+  color: #111827;
+}
+
+.grade-percentage {
+  padding: 4px 8px;
+  background-color: #d1fae5;
+  color: #065f46;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.submission-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.no-submission {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.no-submission p {
+  margin: 0 0 16px;
+  color: #6b7280;
+}
+
+.submit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.submit-btn svg {
+  margin-right: 8px;
+}
+
+.submit-btn:hover {
+  background-color: #2563eb;
+}
+
+/* Teacher student submissions section */
+.student-submissions {
+  margin-top: 24px;
+}
+
+.student-submissions h4 {
+  margin: 0 0 12px;
+  font-size: 16px;
+  color: #111827;
+}
+
+.submissions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.student-submission-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  background-color: #f9fafb;
+  border-radius: 6px;
+}
+
+.student-info {
+  display: flex;
+  align-items: center;
+  width: 30%;
+}
+
+.student-icon {
+  font-size: 16px;
+  color: #6b7280;
+  margin-right: 8px;
+}
+
+.student-name {
+  font-size: 14px;
+  color: #111827;
+}
+
+.submission-status {
+  width: 20%;
+}
+
+.submission-date {
+  width: 20%;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.grade-section {
+  width: 15%;
+  text-align: center;
+}
+
+.grade-display {
+  font-size: 14px;
+  font-weight: 500;
+  color: #059669;
+}
+
+.grade-btn {
+  padding: 4px 8px;
+  background-color: #f3f4f6;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.grade-btn:hover {
+  background-color: #e5e7eb;
+}
+
+.not-submitted {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+/* Empty state */
+.empty-assignments {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 48px;
+  color: #d1d5db;
+  margin-bottom: 16px;
+}
+
+.empty-assignments p {
+  margin: 0 0 16px;
+  color: #6b7280;
+}
+
+/* Loading state */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f4f6;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background-color: #fff;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #111827;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.help-text {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.file-upload {
+  border: 2px dashed #d1d5db;
+  border-radius: 6px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.file-upload:hover {
+  border-color: #9ca3af;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.cancel-btn {
+  padding: 8px 16px;
+  background-color: #f3f4f6;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancel-btn:hover {
+  background-color: #e5e7eb;
+}
+
+.assignment-info-summary {
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.assignment-info-summary h4 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  color: #111827;
+}
+
+.summary-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .assignments-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .filter-controls {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .class-filter {
+    width: 100%;
+  }
+  
+  .class-filter select {
+    width: 100%;
+  }
+  
+  .create-btn {
+    width: 100%;
+  }
+  
+  .assignments-list {
+    grid-template-columns: 1fr;
+  }
+  
+  .student-submission-item {
+    flex-wrap: wrap;
+  }
+  
+  .student-info {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+  
+  .submission-status,
+  .submission-date,
+  .grade-section {
+    width: auto;
+    margin-right: 12px;
+  }
+} 
