@@ -1,6 +1,44 @@
 // Base API URL
 const API_BASE_URL = 'http://localhost:5000/api';
 
+// Mock user database to store registered users
+let mockUsers = [
+  {
+    id: 'student_1',
+    fullName: 'Alex Johnson',
+    email: 'student@example.com',
+    password: 'student123',
+    role: 'student'
+  },
+  {
+    id: 'teacher_1',
+    fullName: 'Prof. Sarah Johnson',
+    email: 'teacher@example.com',
+    password: 'teacher123',
+    role: 'teacher'
+  },
+  {
+    id: 'admin_1',
+    fullName: 'Admin User',
+    email: 'admin@example.com',
+    password: 'admin123',
+    role: 'admin'
+  }
+];
+
+// Try to load any previously registered mock users from localStorage
+try {
+  const storedUsers = localStorage.getItem('mockUsers');
+  if (storedUsers) {
+    const parsedUsers = JSON.parse(storedUsers);
+    if (Array.isArray(parsedUsers) && parsedUsers.length > 0) {
+      mockUsers = parsedUsers;
+    }
+  }
+} catch (error) {
+  console.error('Error loading mock users:', error);
+}
+
 // Auth API methods
 const authApi = {
   // Register a new user
@@ -127,57 +165,57 @@ const mockAuthApi = {
       throw new Error('All fields are required');
     }
     
-    // Simulate successful registration
-    const mockToken = 'mock-jwt-token-' + Date.now();
-    localStorage.setItem('authToken', mockToken);
-    localStorage.setItem('user', JSON.stringify({
+    // Check if user already exists
+    const existingUser = mockUsers.find(user => user.email === userData.email);
+    if (existingUser) {
+      throw new Error('User with this email already exists');
+    }
+    
+    // Create new user
+    const newUser = {
       id: 'user_' + Date.now(),
       fullName: userData.fullName,
       email: userData.email,
+      password: userData.password,
       role: userData.role
-    }));
+    };
     
-    return { token: mockToken };
+    // Add to mock database
+    mockUsers.push(newUser);
+    
+    // Save updated users to localStorage
+    localStorage.setItem('mockUsers', JSON.stringify(mockUsers));
+    
+    // Simulate successful registration
+    const mockToken = 'mock-jwt-token-' + Date.now();
+    
+    // Store user data without password
+    const userToStore = { ...newUser };
+    delete userToStore.password;
+    
+    localStorage.setItem('authToken', mockToken);
+    localStorage.setItem('user', JSON.stringify(userToStore));
+    
+    return { token: mockToken, user: userToStore };
   },
   
   login: async (email, password) => {
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 800));
     
-    // Mock user validation
-    if (email === 'student@example.com' && password === 'student123') {
-      const user = {
-        id: 'student_1',
-        fullName: 'Alex Johnson',
-        email: 'student@example.com',
-        role: 'student'
-      };
-      const mockToken = 'mock-jwt-token-student';
+    // Find user in mock database
+    const user = mockUsers.find(u => u.email === email && u.password === password);
+    
+    if (user) {
+      // Create a copy without the password
+      const userToReturn = { ...user };
+      delete userToReturn.password;
+      
+      const mockToken = 'mock-jwt-token-' + user.id;
       localStorage.setItem('authToken', mockToken);
-      localStorage.setItem('user', JSON.stringify(user));
-      return { token: mockToken, user };
-    } else if (email === 'teacher@example.com' && password === 'teacher123') {
-      const user = {
-        id: 'teacher_1',
-        fullName: 'Prof. Sarah Johnson',
-        email: 'teacher@example.com',
-        role: 'teacher'
-      };
-      const mockToken = 'mock-jwt-token-teacher';
-      localStorage.setItem('authToken', mockToken);
-      localStorage.setItem('user', JSON.stringify(user));
-      return { token: mockToken, user };
-    } else if (email === 'admin@example.com' && password === 'admin123') {
-      const user = {
-        id: 'admin_1',
-        fullName: 'Admin User',
-        email: 'admin@example.com',
-        role: 'admin'
-      };
-      const mockToken = 'mock-jwt-token-admin';
-      localStorage.setItem('authToken', mockToken);
-      localStorage.setItem('user', JSON.stringify(user));
-      return { token: mockToken, user };
+      localStorage.setItem('user', JSON.stringify(userToReturn));
+      
+      return { token: mockToken, user: userToReturn };
     } else {
       throw new Error('Invalid credentials');
     }

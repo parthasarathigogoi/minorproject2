@@ -1,14 +1,19 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useBranding } from '../../context/BrandingContext';
 import { useExam } from '../../context/ExamContext';
-import { FaUserGraduate, FaBookOpen, FaClipboardList, FaBook, FaFileAlt, FaCalendarAlt, FaClipboardCheck, FaPencilAlt, FaClock, FaLink, FaFileUpload, FaTasks, FaCheckCircle, FaFileDownload, FaExclamationTriangle, FaHome, FaChartBar, FaComments } from 'react-icons/fa';
+import { useAuth } from '../../context/AuthContext';
+import { FaUserGraduate, FaBookOpen, FaClipboardList, FaBook, FaFileAlt, FaCalendarAlt, FaClipboardCheck, FaPencilAlt, FaClock, FaLink, FaFileUpload, FaTasks, FaCheckCircle, FaFileDownload, FaExclamationTriangle, FaHome, FaChartBar, FaComments, FaUserCircle, FaCog, FaSignOutAlt, FaBell, FaGraduationCap, FaBrain } from 'react-icons/fa';
 import '../../styles/StudentDashboard.css';
+import '../../styles/PracticeTestBuilder.css';
 import NotesViewer from '../common/NotesViewer';
 import AssignmentManager from '../common/AssignmentManager';
+import PracticeTestBuilder from './PracticeTestBuilder';
 
 // Student-specific components
 const StudentHome = () => {
+  const { currentUser } = useAuth();
+  const navigate = useNavigate();
   const [showJoinModal, setShowJoinModal] = useState(false);
   
   // Dummy data for enrolled classes
@@ -38,12 +43,21 @@ const StudentHome = () => {
     { id: 2, title: 'Physics Quiz', class: 'Physics', date: '2023-06-16', duration: '30 min' },
   ];
 
+  // Get current date
+  const today = new Date();
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  const formattedDate = today.toLocaleDateString('en-US', options);
+  
+  const goPracticeTest = () => {
+    navigate('/student/exam/practice');
+  };
+
   return (
     <div className="student-home">
       <section className="welcome-banner">
         <div className="welcome-text">
-          <h2>Welcome, Alex</h2>
-          <p>Tuesday, June 13, 2023 | <span className="highlight">2 Assignments Due This Week</span></p>
+          <h2>Welcome, {currentUser ? currentUser.fullName : 'Student'}</h2>
+          <p>{formattedDate} | <span className="highlight">2 Assignments Due This Week</span></p>
         </div>
         <div className="student-stats">
           <div className="stat-item">
@@ -88,7 +102,7 @@ const StudentHome = () => {
             <p>Assignments & homework</p>
           </div>
           
-          <div className="action-tile">
+          <div className="action-tile" onClick={goPracticeTest}>
             <div className="tile-icon exam">
               <FaPencilAlt />
             </div>
@@ -186,7 +200,7 @@ const StudentHome = () => {
         <section className="exams-section">
           <div className="section-header">
             <h3>Upcoming Exams</h3>
-            <button className="practice-btn">Practice Tests</button>
+            <button className="practice-btn" onClick={goPracticeTest}>Practice Tests</button>
           </div>
           <div className="exams-list">
             {upcomingExams.map(exam => (
@@ -1200,6 +1214,7 @@ const StudentAssignments = () => (
 const StudentDashboard = () => {
   const { branding } = useBranding();
   const { pathname } = useLocation();
+  const { currentUser, logout } = useAuth();
   const [notifications, setNotifications] = useState([
     { id: 1, text: 'New grade posted in Computer Science', read: false },
     { id: 2, text: 'New assignment in Physics', read: false },
@@ -1207,11 +1222,41 @@ const StudentDashboard = () => {
   ]);
   const [showProfile, setShowProfile] = useState(false);
   const [profileData, setProfileData] = useState({
-    name: 'Alex Johnson',
     bio: 'Computer Science major, Junior year',
     photo: null
   });
   const [activeSection, setActiveSection] = useState('home');
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  
+  const profileRef = useRef(null);
+  const notificationRef = useRef(null);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setShowProfileDropdown(false);
+      }
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        setShowNotifications(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    logout();
+    // Redirect will be handled by AuthContext
+  };
+  
+  const markAllNotificationsAsRead = () => {
+    setNotifications(notifications.map(n => ({ ...n, read: true })));
+  };
 
   const renderContent = () => {
     return (
@@ -1225,6 +1270,7 @@ const StudentDashboard = () => {
         <Route path="assignments/:id" element={<AssignmentDetails />} />
         <Route path="notes/:id" element={<NotesReader />} />
         <Route path="exam/:id" element={<ExamInterface />} />
+        <Route path="exam/practice" element={<PracticeTestBuilder />} />
         <Route path="*" element={<StudentHome />} />
       </Routes>
     );
@@ -1234,31 +1280,93 @@ const StudentDashboard = () => {
     <div className="student-dashboard">
       <div className="student-sidebar">
         <div className="sidebar-header">
-          <img src="https://via.placeholder.com/50" alt="Student" className="student-avatar" />
-          <h3>Alex Johnson</h3>
-          <p className="student-info">Grade 11</p>
+          <div className="profile-picture" onClick={() => setShowProfileDropdown(!showProfileDropdown)} ref={profileRef}>
+            {profileData.photo ? (
+              <img src={profileData.photo} alt="Profile" className="student-avatar" />
+            ) : (
+              <div className="default-avatar">
+                <FaUserCircle />
+                <div className="avatar-badge"></div>
+              </div>
+            )}
+          </div>
+          <div className="profile-info">
+            <h3>{currentUser ? currentUser.fullName : 'Student'}</h3>
+            <p className="student-info">{currentUser ? currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1) : 'Student'}</p>
+          </div>
+          
+          {showProfileDropdown && (
+            <div className="profile-dropdown">
+              <div className="dropdown-item">
+                <FaUserCircle /> My Profile
+              </div>
+              <div className="dropdown-item">
+                <FaCog /> Settings
+              </div>
+              <div className="dropdown-item" onClick={handleLogout}>
+                <FaSignOutAlt /> Logout
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="notification-bell" onClick={() => setShowNotifications(!showNotifications)} ref={notificationRef}>
+          <FaBell />
+          {notifications.filter(n => !n.read).length > 0 && (
+            <span className="notification-badge">{notifications.filter(n => !n.read).length}</span>
+          )}
+          
+          {showNotifications && (
+            <div className="notifications-dropdown">
+              <div className="notifications-header">
+                <h4>Notifications</h4>
+                <button className="mark-all-read" onClick={markAllNotificationsAsRead}>Mark all as read</button>
+              </div>
+              <div className="notifications-list">
+                {notifications.length > 0 ? (
+                  notifications.map(notification => (
+                    <div 
+                      key={notification.id} 
+                      className={`notification-item ${notification.read ? 'read' : 'unread'}`}
+                    >
+                      <p>{notification.text}</p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="no-notifications">
+                    <p>No notifications</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="sidebar-section">
-          <div className="section-title">Academics</div>
+          <div className="section-title">
+            <FaGraduationCap className="section-icon" /> Academics
+          </div>
           <nav className="sidebar-nav">
             <Link to="/student" className={pathname === '/student' ? 'active' : ''}>
-              <FaHome /> Dashboard
+              <FaHome /> <span>Dashboard</span>
             </Link>
             <Link to="/student/courses" className={pathname.includes('/student/courses') ? 'active' : ''}>
-              <FaBookOpen /> My Courses
+              <FaBookOpen /> <span>My Courses</span>
             </Link>
             <Link to="/student/assignments" className={pathname.includes('/student/assignments') ? 'active' : ''}>
-              <FaClipboardList /> Assignments
+              <FaClipboardList /> <span>Assignments</span>
             </Link>
             <Link to="/student/notes" className={pathname.includes('/student/notes') ? 'active' : ''}>
-              <FaFileAlt /> Notes & Materials
+              <FaFileAlt /> <span>Notes & Materials</span>
             </Link>
             <Link to="/student/grades" className={pathname.includes('/student/grades') ? 'active' : ''}>
-              <FaChartBar /> Grades
+              <FaChartBar /> <span>Grades</span>
             </Link>
             <Link to="/student/discussion" className={pathname.includes('/student/discussion') ? 'active' : ''}>
-              <FaComments /> Discussion
+              <FaComments /> <span>Discussion</span>
+            </Link>
+            <Link to="/student/exam/practice" className={pathname.includes('/student/exam/practice') ? 'active' : ''}>
+              <FaBrain /> <span>Practice Tests</span>
             </Link>
           </nav>
         </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import { useBranding } from '../../context/BrandingContext';
+import { useAuth } from '../../context/AuthContext';
 import SystemSettings from './SystemSettings';
 import BrandingManager from './BrandingManager';
 import InstituteManagement from './InstituteManagement';
@@ -8,57 +9,61 @@ import '../../styles/AdminDashboard.css';
 import '../../styles/InstituteManagement.css';
 
 // Admin-specific components
-const AdminHome = () => (
-  <>
-    <div className="welcome-section">
-      <h3>Welcome, Administrator!</h3>
-      <div className="quick-stats">
-        <div className="stat-card">
-          <h4>Total Users</h4>
-          <p>256</p>
-        </div>
-        <div className="stat-card">
-          <h4>Active Courses</h4>
-          <p>18</p>
-        </div>
-        <div className="stat-card">
-          <h4>New Registrations</h4>
-          <p>12</p>
-        </div>
-        <div className="stat-card">
-          <h4>System Health</h4>
-          <p className="healthy">Good</p>
-        </div>
-      </div>
-    </div>
-    <div className="admin-actions">
-      <h3>Quick Actions</h3>
-      <div className="action-buttons">
-        <button className="action-btn">Add New User</button>
-        <button className="action-btn">Create Course</button>
-        <button className="action-btn">View System Logs</button>
-        <button className="action-btn">Backup System</button>
-      </div>
-    </div>
-    <div className="recent-activity">
-      <h3>Recent Activity</h3>
-      <div className="activity-list">
-        <div className="activity-item">
-          <p><strong>New Teacher Registration:</strong> Prof. James Wilson</p>
-          <span>Today, 9:30 AM</span>
-        </div>
-        <div className="activity-item">
-          <p><strong>New Course Created:</strong> Advanced Biology by Prof. Martinez</p>
-          <span>Yesterday, 2:45 PM</span>
-        </div>
-        <div className="activity-item">
-          <p><strong>System Update:</strong> Version 2.3.1 deployed</p>
-          <span>June 3, 2023</span>
+const AdminHome = () => {
+  const { currentUser } = useAuth();
+  
+  return (
+    <>
+      <div className="welcome-section">
+        <h3>Welcome, {currentUser ? currentUser.fullName : 'Administrator'}!</h3>
+        <div className="quick-stats">
+          <div className="stat-card">
+            <h4>Total Users</h4>
+            <p>256</p>
+          </div>
+          <div className="stat-card">
+            <h4>Active Courses</h4>
+            <p>18</p>
+          </div>
+          <div className="stat-card">
+            <h4>New Registrations</h4>
+            <p>12</p>
+          </div>
+          <div className="stat-card">
+            <h4>System Health</h4>
+            <p className="healthy">Good</p>
+          </div>
         </div>
       </div>
-    </div>
-  </>
-);
+      <div className="admin-actions">
+        <h3>Quick Actions</h3>
+        <div className="action-buttons">
+          <button className="action-btn">Add New User</button>
+          <button className="action-btn">Create Course</button>
+          <button className="action-btn">View System Logs</button>
+          <button className="action-btn">Backup System</button>
+        </div>
+      </div>
+      <div className="recent-activity">
+        <h3>Recent Activity</h3>
+        <div className="activity-list">
+          <div className="activity-item">
+            <p><strong>New Teacher Registration:</strong> Prof. James Wilson</p>
+            <span>Today, 9:30 AM</span>
+          </div>
+          <div className="activity-item">
+            <p><strong>New Course Created:</strong> Advanced Biology by Prof. Martinez</p>
+            <span>Yesterday, 2:45 PM</span>
+          </div>
+          <div className="activity-item">
+            <p><strong>System Update:</strong> Version 2.3.1 deployed</p>
+            <span>June 3, 2023</span>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+};
 
 const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');

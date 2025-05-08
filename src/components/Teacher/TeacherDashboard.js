@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { FaClipboardList, FaFileUpload, FaChalkboardTeacher, FaShareAlt, FaBook, FaClipboard, FaCalculator, FaFileAlt, FaRocket, FaUserCheck, FaBullhorn } from 'react-icons/fa';
 import '../../styles/TeacherDashboard.css';
 import NotesViewer from '../common/NotesViewer';
@@ -7,6 +8,7 @@ import AssignmentManager from '../common/AssignmentManager';
 
 // Teacher-specific components
 const TeacherHome = () => {
+  const { currentUser } = useAuth();
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showAssignmentModal, setShowAssignmentModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -32,12 +34,17 @@ const TeacherHome = () => {
     { id: 2, name: 'Physics Quiz', subject: 'Physics', date: '2023-06-15', status: 'Draft' },
   ];
 
+  // Get current date
+  const today = new Date();
+  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  const formattedDate = today.toLocaleDateString('en-US', options);
+
   return (
     <div className="teacher-home">
       <section className="welcome-banner">
         <div className="welcome-text">
-          <h2>Welcome, Professor Smith</h2>
-          <p>Tuesday, June 13, 2023 | <span className="highlight">3 Classes Today</span></p>
+          <h2>Welcome, {currentUser ? currentUser.fullName : 'Teacher'}</h2>
+          <p>{formattedDate} | <span className="highlight">3 Classes Today</span></p>
         </div>
         <div className="quick-stats">
           <div className="stat-item">
