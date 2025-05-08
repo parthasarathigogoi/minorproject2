@@ -9,6 +9,11 @@ const examRoutes = require('./routes/examRoutes');
 const subjectRoutes = require('./routes/subjectRoutes');
 const questionRoutes = require('./routes/questionRoutes');
 const authRoutes = require('./routes/authRoutes');
+const classSectionRoutes = require('./routes/classSectionRoutes');
+const teacherSubjectRoutes = require('./routes/teacherSubjectRoutes');
+const assignmentRoutes = require('./routes/assignmentRoutes');
+const noteRoutes = require('./routes/noteRoutes');
+const practiceTestRoutes = require('./routes/practiceTestRoutes');
 
 // Initialize express app
 const app = express();
@@ -32,6 +37,11 @@ app.use('/api/exams', examRoutes);
 app.use('/api/subjects', subjectRoutes);
 app.use('/api/questions', questionRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/class-sections', classSectionRoutes);
+app.use('/api/teacher-subjects', teacherSubjectRoutes);
+app.use('/api/assignments', assignmentRoutes);
+app.use('/api/notes', noteRoutes);
+app.use('/api/practice-tests', practiceTestRoutes);
 
 // Basic route for testing
 app.get('/', (req, res) => {

@@ -8,23 +8,36 @@ const QuestionSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['multiple_choice', 'descriptive'],
+    enum: ['multiple_choice', 'short_answer', 'long_answer', 'true_false', 'fill_in_blank'],
     required: true
   },
   subject: {
-    type: String,
-    required: true,
-    trim: true
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Subject',
+    required: true
+  },
+  classSection: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'ClassSection',
+    required: true
   },
   marks: {
     type: Number,
     required: true,
     min: 1
   },
+  topic: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  image: {
+    type: String
+  },
   options: {
     type: [String],
     required: function() {
-      return this.type === 'multiple_choice';
+      return this.type === 'multiple_choice' || this.type === 'true_false';
     }
   },
   correctAnswer: {
@@ -33,13 +46,17 @@ const QuestionSchema = new mongoose.Schema({
   },
   difficultyLevel: {
     type: String,
-    enum: ['easy', 'medium', 'hard'],
+    enum: ['easy', 'medium', 'hard', 'challenging'],
     default: 'medium'
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
+  },
+  explanation: {
+    type: String,
+    trim: true
   },
   createdAt: {
     type: Date,
@@ -58,6 +75,6 @@ QuestionSchema.pre('save', function(next) {
 });
 
 // Create a text index for search functionality
-QuestionSchema.index({ text: 'text', subject: 'text' });
+QuestionSchema.index({ text: 'text', topic: 'text' });
 
 module.exports = mongoose.model('Question', QuestionSchema); 

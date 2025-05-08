@@ -1,579 +1,226 @@
-import React, { useState } from 'react';
-import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from 'react';
+import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { FaClipboardList, FaFileUpload, FaChalkboardTeacher, FaShareAlt, FaBook, FaClipboard, FaCalculator, FaFileAlt, FaRocket, FaUserCheck, FaBullhorn } from 'react-icons/fa';
+import { FaClipboardList, FaFileUpload, FaChalkboardTeacher, FaShareAlt, FaBook, FaClipboard, FaCalculator, FaFileAlt, FaRocket, FaUserCheck, FaBullhorn, FaUserCircle, FaCog, FaSignOutAlt, FaBell, FaGraduationCap, FaHome, FaChartBar, FaClipboardCheck, FaCalendarAlt, FaUsers } from 'react-icons/fa';
 import '../../styles/TeacherDashboard.css';
 import NotesViewer from '../common/NotesViewer';
 import AssignmentManager from '../common/AssignmentManager';
 
-// Teacher-specific components
-const TeacherHome = () => {
-  const { currentUser } = useAuth();
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [showAssignmentModal, setShowAssignmentModal] = useState(false);
-  const [showShareModal, setShowShareModal] = useState(false);
-  const [showExamModal, setShowExamModal] = useState(false);
-  
-  // Dummy data for subjects
-  const subjects = [
-    { id: 1, name: 'Mathematics 101', code: 'MATH101', students: 32, color: '#3563E9' },
-    { id: 2, name: 'Physics', code: 'PHYS202', students: 28, color: '#00C853' },
-    { id: 3, name: 'Computer Science', code: 'CS110', students: 25, color: '#FF6D00' },
-  ];
-  
-  // Dummy data for recent documents
-  const recentDocuments = [
-    { id: 1, name: 'Calculus Quiz.pdf', type: 'Quiz', date: '2023-06-10', size: '1.2 MB' },
-    { id: 2, name: 'Physics Homework.docx', type: 'Assignment', date: '2023-06-08', size: '850 KB' },
-    { id: 3, name: 'Programming Lesson.pptx', type: 'Lesson', date: '2023-06-05', size: '4.6 MB' },
-  ];
-  
-  // Dummy data for upcoming exams
-  const upcomingExams = [
-    { id: 1, name: 'Mid-term Exam', subject: 'Mathematics 101', date: '2023-06-20', status: 'Scheduled' },
-    { id: 2, name: 'Physics Quiz', subject: 'Physics', date: '2023-06-15', status: 'Draft' },
-  ];
-
-  // Get current date
-  const today = new Date();
-  const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  const formattedDate = today.toLocaleDateString('en-US', options);
-
-  return (
-    <div className="teacher-home">
-      <section className="welcome-banner">
-        <div className="welcome-text">
-          <h2>Welcome, {currentUser ? currentUser.fullName : 'Teacher'}</h2>
-          <p>{formattedDate} | <span className="highlight">3 Classes Today</span></p>
-        </div>
-        <div className="quick-stats">
-          <div className="stat-item">
-            <div className="stat-value">3</div>
-            <div className="stat-label">Classes</div>
-          </div>
-          <div className="stat-item">
-            <div className="stat-value">85</div>
-            <div className="stat-label">Students</div>
-          </div>
-          <div className="stat-item">
-            <div className="stat-value">12</div>
-            <div className="stat-label">Assignments</div>
-          </div>
-          <div className="stat-item">
-            <div className="stat-value">5</div>
-            <div className="stat-label">Pending</div>
-          </div>
-        </div>
-      </section>
-      
-      <section className="quick-actions">
-        <h3>Quick Actions</h3>
-        <div className="action-cards">
-          <div className="action-card" onClick={() => setShowUploadModal(true)}>
-            <div className="card-icon upload">
-              <FaFileUpload />
-            </div>
-            <h4>Upload Questions</h4>
-            <p>Create questions with marks</p>
-          </div>
-          
-          <div className="action-card" onClick={() => setShowAssignmentModal(true)}>
-            <div className="card-icon assignment">
-              <FaClipboardList />
-            </div>
-            <h4>Give Assignments</h4>
-            <p>Create and distribute tasks</p>
-          </div>
-          
-          <div className="action-card" onClick={() => setShowShareModal(true)}>
-            <div className="card-icon share">
-              <FaShareAlt />
-            </div>
-            <h4>Share Subject</h4>
-            <p>Share code or link with students</p>
-          </div>
-          
-          <div className="action-card" onClick={() => setShowExamModal(true)}>
-            <div className="card-icon exam">
-              <FaCalculator />
-            </div>
-            <h4>Start Practice Exam</h4>
-            <p>Begin a timed practice session</p>
-          </div>
-        </div>
-      </section>
-      
-      <div className="dashboard-grid">
-        <section className="subjects-section">
-          <div className="section-header">
-            <h3>Your Subjects</h3>
-            <button className="view-all-btn">View All</button>
-          </div>
-          <div className="subjects-list">
-            {subjects.map(subject => (
-              <div className="subject-card" key={subject.id}>
-                <div className="subject-color" style={{ backgroundColor: subject.color }}></div>
-                <div className="subject-details">
-                  <h4>{subject.name}</h4>
-                  <div className="subject-meta">
-                    <span><FaBook /> {subject.code}</span>
-                    <span><FaChalkboardTeacher /> {subject.students} students</span>
-                  </div>
-                  <div className="subject-actions">
-                    <button className="subject-btn">Materials</button>
-                    <button className="subject-btn">Grade</button>
-                  </div>
-                </div>
-              </div>
-            ))}
-            <div className="add-subject-card">
-              <div className="add-icon">+</div>
-              <p>Add New Subject</p>
-            </div>
-          </div>
-        </section>
-        
-        <section className="documents-section">
-          <div className="section-header">
-            <h3>Recent Documents</h3>
-            <button className="view-all-btn">View All</button>
-          </div>
-          <div className="documents-list">
-            {recentDocuments.map(doc => (
-              <div className="document-item" key={doc.id}>
-                <div className="document-icon">
-                  <FaFileAlt />
-                </div>
-                <div className="document-details">
-                  <h4>{doc.name}</h4>
-                  <div className="document-meta">
-                    <span>{doc.type}</span>
-                    <span>•</span>
-                    <span>{doc.date}</span>
-                    <span>•</span>
-                    <span>{doc.size}</span>
-                  </div>
-                </div>
-                <div className="document-actions">
-                  <button className="icon-btn"><FaShareAlt /></button>
-                </div>
-              </div>
-            ))}
-          </div>
-          <button className="upload-btn">
-            <FaFileUpload /> Upload New Document
-          </button>
-        </section>
-        
-        <section className="exams-section">
-          <div className="section-header">
-            <h3>Upcoming Exams</h3>
-            <button className="new-exam-btn">+ New Exam</button>
-          </div>
-          <div className="exams-list">
-            {upcomingExams.map(exam => (
-              <div className="exam-card" key={exam.id}>
-                <div className="exam-header">
-                  <h4>{exam.name}</h4>
-                  <span className={`exam-status ${exam.status.toLowerCase()}`}>
-                    {exam.status}
-                  </span>
-                </div>
-                <div className="exam-details">
-                  <p><FaBook /> {exam.subject}</p>
-                  <p><FaClipboard /> {exam.date}</p>
-                </div>
-                <div className="exam-actions">
-                  <button className="exam-btn">Edit</button>
-                  <button className="exam-btn primary">
-                    {exam.status === 'Draft' ? 'Publish' : 'Start'}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      </div>
-      
-      {/* Upload Questions Modal */}
-      {showUploadModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h3>Upload Questions with Marks</h3>
-              <button className="close-btn" onClick={() => setShowUploadModal(false)}>×</button>
-            </div>
-            <div className="modal-body">
-              <div className="form-group">
-                <label>Subject</label>
-                <select>
-                  <option value="">-- Select Subject --</option>
-                  {subjects.map(subject => (
-                    <option key={subject.id} value={subject.id}>{subject.name}</option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="form-group">
-                <label>Question Type</label>
-                <select>
-                  <option value="multiple_choice">Multiple Choice</option>
-                  <option value="short_answer">Short Answer</option>
-                  <option value="essay">Essay</option>
-                  <option value="true_false">True/False</option>
-                </select>
-              </div>
-              
-              <div className="form-group">
-                <label>Question Text</label>
-                <textarea placeholder="Enter your question here..."></textarea>
-              </div>
-              
-              <div className="form-group">
-                <label>Marks</label>
-                <input type="number" min="1" defaultValue="1" />
-              </div>
-              
-              <div className="form-group">
-                <label>Upload Attachments (Optional)</label>
-                <div className="file-upload">
-                  <input type="file" id="question-attachment" />
-                  <label htmlFor="question-attachment">
-                    <FaFileUpload /> Choose Files
-                  </label>
-                </div>
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button className="cancel-btn" onClick={() => setShowUploadModal(false)}>Cancel</button>
-              <button className="save-btn">Save Question</button>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Assignment Modal */}
-      {showAssignmentModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h3>Create Assignment</h3>
-              <button className="close-btn" onClick={() => setShowAssignmentModal(false)}>×</button>
-            </div>
-            <div className="modal-body">
-              <div className="form-group">
-                <label>Title</label>
-                <input type="text" placeholder="Assignment title" />
-              </div>
-              
-              <div className="form-group">
-                <label>Subject</label>
-                <select>
-                  <option value="">-- Select Subject --</option>
-                  {subjects.map(subject => (
-                    <option key={subject.id} value={subject.id}>{subject.name}</option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="form-group">
-                <label>Instructions</label>
-                <textarea placeholder="Enter instructions for students..."></textarea>
-              </div>
-              
-              <div className="form-row">
-                <div className="form-group half">
-                  <label>Due Date</label>
-                  <input type="date" />
-                </div>
-                
-                <div className="form-group half">
-                  <label>Total Points</label>
-                  <input type="number" min="1" defaultValue="100" />
-                </div>
-              </div>
-              
-              <div className="form-group">
-                <label>Attachments</label>
-                <div className="file-upload">
-                  <input type="file" id="assignment-attachment" multiple />
-                  <label htmlFor="assignment-attachment">
-                    <FaFileUpload /> Upload Files
-                  </label>
-                </div>
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button className="cancel-btn" onClick={() => setShowAssignmentModal(false)}>Cancel</button>
-              <button className="draft-btn">Save as Draft</button>
-              <button className="save-btn">Publish Assignment</button>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Share Subject Modal */}
-      {showShareModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h3>Share Subject</h3>
-              <button className="close-btn" onClick={() => setShowShareModal(false)}>×</button>
-            </div>
-            <div className="modal-body">
-              <div className="form-group">
-                <label>Select Subject</label>
-                <select>
-                  <option value="">-- Select Subject --</option>
-                  {subjects.map(subject => (
-                    <option key={subject.id} value={subject.id}>{subject.name}</option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="share-options">
-                <div className="share-option">
-                  <input type="radio" id="share-code" name="share-type" defaultChecked />
-                  <label htmlFor="share-code">Share Class Code</label>
-                </div>
-                <div className="share-option">
-                  <input type="radio" id="share-link" name="share-type" />
-                  <label htmlFor="share-link">Share Join Link</label>
-                </div>
-              </div>
-              
-              <div className="share-code-display">
-                <h4>Class Code</h4>
-                <div className="code-container">
-                  <span className="course-code">MATH101-ABC123</span>
-                  <button className="copy-btn">Copy</button>
-                </div>
-                <p className="help-text">Share this code with your students. They can use it to join this class from their dashboard.</p>
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button className="cancel-btn" onClick={() => setShowShareModal(false)}>Close</button>
-              <button className="email-btn">Email to Students</button>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Practice Exam Modal */}
-      {showExamModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h3>Start Practice Exam</h3>
-              <button className="close-btn" onClick={() => setShowExamModal(false)}>×</button>
-            </div>
-            <div className="modal-body">
-              <div className="form-group">
-                <label>Exam Title</label>
-                <input type="text" placeholder="Practice Exam Title" />
-              </div>
-              
-              <div className="form-group">
-                <label>Subject</label>
-                <select>
-                  <option value="">-- Select Subject --</option>
-                  {subjects.map(subject => (
-                    <option key={subject.id} value={subject.id}>{subject.name}</option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="form-row">
-                <div className="form-group half">
-                  <label>Duration (minutes)</label>
-                  <input type="number" min="5" defaultValue="60" />
-                </div>
-                
-                <div className="form-group half">
-                  <label>Total Points</label>
-                  <input type="number" min="1" defaultValue="100" />
-                </div>
-              </div>
-              
-              <div className="form-group">
-                <label>Question Source</label>
-                <div className="exam-options">
-                  <div className="exam-option">
-                    <input type="radio" id="question-bank" name="question-source" defaultChecked />
-                    <label htmlFor="question-bank">From Question Bank</label>
-                  </div>
-                  <div className="exam-option">
-                    <input type="radio" id="upload-new" name="question-source" />
-                    <label htmlFor="upload-new">Upload New Questions</label>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="form-group">
-                <label>Practice Mode Settings</label>
-                <div className="checkbox-group">
-                  <div className="checkbox-option">
-                    <input type="checkbox" id="show-answers" defaultChecked />
-                    <label htmlFor="show-answers">Show answers after submission</label>
-                  </div>
-                  <div className="checkbox-option">
-                    <input type="checkbox" id="allow-retake" defaultChecked />
-                    <label htmlFor="allow-retake">Allow multiple attempts</label>
-                  </div>
-                  <div className="checkbox-option">
-                    <input type="checkbox" id="randomize" />
-                    <label htmlFor="randomize">Randomize question order</label>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button className="cancel-btn" onClick={() => setShowExamModal(false)}>Cancel</button>
-              <button className="save-btn">Create Practice Exam</button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const NotesManager = () => (
-  <div className="teacher-view notes-manager-view">
-    <NotesViewer userRole="teacher" />
-  </div>
-);
-
-const AssignmentsManager = () => (
-  <div className="teacher-view assignments-manager-view">
-    <AssignmentManager userRole="teacher" />
-  </div>
-);
-
-const GradingTool = () => (
-  <div className="grading-container">
-    <h3>Grading Tool</h3>
-    <div className="class-selector">
-      <select>
-        <option>Math 101</option>
-        <option>Physics 202</option>
-        <option>Computer Science 110</option>
-      </select>
-    </div>
-    <table className="grading-table">
-      <thead>
-        <tr>
-          <th>Student</th>
-          <th>Assignment 1</th>
-          <th>Assignment 2</th>
-          <th>Midterm</th>
-          <th>Final</th>
-          <th>Overall</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>John Doe</td>
-          <td>85%</td>
-          <td>92%</td>
-          <td>78%</td>
-          <td>--</td>
-          <td>85%</td>
-        </tr>
-        <tr>
-          <td>Sarah Miller</td>
-          <td>90%</td>
-          <td>88%</td>
-          <td>94%</td>
-          <td>--</td>
-          <td>91%</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-);
-
-const AttendanceTracker = () => (
-  <div className="attendance-container">
-    <h3>Attendance Tracker</h3>
-    <div className="class-date-selector">
-      <select>
-        <option>Math 101</option>
-        <option>Physics 202</option>
-        <option>Computer Science 110</option>
-      </select>
-      <input type="date" defaultValue="2023-06-10" />
-    </div>
-    <div className="attendance-list">
-      <div className="attendance-item">
-        <span>John Doe</span>
-        <div className="attendance-actions">
-          <button className="present">Present</button>
-          <button className="absent">Absent</button>
-          <button className="late">Late</button>
-        </div>
-      </div>
-      <div className="attendance-item">
-        <span>Sarah Miller</span>
-        <div className="attendance-actions">
-          <button className="present active">Present</button>
-          <button className="absent">Absent</button>
-          <button className="late">Late</button>
-        </div>
-      </div>
-    </div>
-  </div>
-);
-
-const AnnouncementsManager = () => {
-  const [announcement, setAnnouncement] = useState('');
-  
-  return (
-    <div className="announcements-container">
-      <h3>Announcements</h3>
-      <div className="new-announcement">
-        <textarea 
-          placeholder="Type your announcement here..." 
-          value={announcement}
-          onChange={(e) => setAnnouncement(e.target.value)}
-        />
-        <div className="announcement-options">
-          <select>
-            <option>All Classes</option>
-            <option>Math 101</option>
-            <option>Physics 202</option>
-          </select>
-          <button>Post Announcement</button>
-        </div>
-      </div>
-      <div className="announcements-list">
-        <div className="announcement-item">
-          <h4>Reminder: Final Project Due Next Week</h4>
-          <p>Don't forget that your final projects are due next Friday. Office hours will be extended this week.</p>
-          <div className="announcement-meta">
-            <span>Posted to: All Classes</span>
-            <span>June 5, 2023</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
+// Import teacher dashboard sections
+import MySubjects from './Sections/MySubjects';
+import UploadQuestions from './Sections/UploadQuestions';
+import Assignments from './Sections/Assignments';
+import Notes from './Sections/Notes';
+import Students from './Sections/Students';
+import PracticeTests from './Sections/PracticeTests';
+import ClassSectionSelector from './ClassSectionSelector';
 
 const TeacherDashboard = () => {
-  const [activeSection, setActiveSection] = useState('home');
   const { pathname } = useLocation();
+  const { currentUser, logout } = useAuth();
+  const navigate = useNavigate();
+  const [notifications, setNotifications] = useState([
+    { id: 1, text: 'New student submission for Mathematics 101', read: false },
+    { id: 2, text: 'Question from student in Physics class', read: false },
+    { id: 3, text: 'Admin posted a new announcement', read: false }
+  ]);
+  
+  // Class and Subject states
+  const [selectedClassSection, setSelectedClassSection] = useState(null);
+  const [selectedSubjects, setSelectedSubjects] = useState([]);
+  const [classSections, setClassSections] = useState([]);
+  const [subjectsByClass, setSubjectsByClass] = useState({});
+  const [showSetupPrompt, setShowSetupPrompt] = useState(true);
+  
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  
+  const profileRef = useRef(null);
+  const notificationRef = useRef(null);
+
+  // Fetch class sections and subjects on component mount
+  useEffect(() => {
+    // TODO: Replace with actual API calls
+    const fetchClassSectionsAndSubjects = async () => {
+      try {
+        // Mock data - replace with API call
+        const fetchedClassSections = [
+          { id: 'c1', name: 'Class 10 - A' },
+          { id: 'c2', name: 'Class 10 - B' },
+          { id: 'c3', name: 'Class 11 - Science' },
+          { id: 'c4', name: 'Class 12 - Science' },
+          { id: 's1', name: 'Semester 3 - CSE' },
+          { id: 's2', name: 'Semester 5 - CSE' },
+        ];
+        
+        // Mock data - replace with API call
+        const fetchedSubjectsByClass = {
+          'c1': [
+            { id: 'math10', name: 'Mathematics' },
+            { id: 'physics10', name: 'Physics' },
+            { id: 'chem10', name: 'Chemistry' },
+            { id: 'cs10', name: 'Computer Science' }
+          ],
+          'c2': [
+            { id: 'math10', name: 'Mathematics' },
+            { id: 'physics10', name: 'Physics' },
+            { id: 'chem10', name: 'Chemistry' },
+            { id: 'bio10', name: 'Biology' }
+          ],
+          'c3': [
+            { id: 'math11', name: 'Mathematics' },
+            { id: 'physics11', name: 'Physics' },
+            { id: 'chem11', name: 'Chemistry' }
+          ],
+          'c4': [
+            { id: 'math12', name: 'Mathematics' },
+            { id: 'physics12', name: 'Physics' },
+            { id: 'chem12', name: 'Chemistry' }
+          ],
+          's1': [
+            { id: 'dsa', name: 'Data Structures' },
+            { id: 'dbms', name: 'Database Management' },
+            { id: 'os', name: 'Operating Systems' }
+          ],
+          's2': [
+            { id: 'cn', name: 'Computer Networks' },
+            { id: 'ai', name: 'Artificial Intelligence' },
+            { id: 'ml', name: 'Machine Learning' }
+          ]
+        };
+        
+        setClassSections(fetchedClassSections);
+        setSubjectsByClass(fetchedSubjectsByClass);
+        
+        // Check local storage for previously selected class and subjects
+        const storedClassSection = localStorage.getItem('selectedClassSection');
+        const storedSubjects = localStorage.getItem('selectedSubjects');
+        
+        if (storedClassSection) {
+          setSelectedClassSection(storedClassSection);
+          setShowSetupPrompt(false);
+        }
+        
+        if (storedSubjects) {
+          setSelectedSubjects(JSON.parse(storedSubjects));
+        }
+      } catch (error) {
+        console.error('Error fetching class sections and subjects:', error);
+      }
+    };
+    
+    fetchClassSectionsAndSubjects();
+  }, []);
+  
+  // Save selections to local storage when they change
+  useEffect(() => {
+    if (selectedClassSection) {
+      localStorage.setItem('selectedClassSection', selectedClassSection);
+    }
+    
+    if (selectedSubjects.length > 0) {
+      localStorage.setItem('selectedSubjects', JSON.stringify(selectedSubjects));
+    }
+  }, [selectedClassSection, selectedSubjects]);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setShowProfileDropdown(false);
+      }
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        setShowNotifications(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleLogout = () => {
+    logout();
+    // Redirect will be handled by AuthContext
+  };
+  
+  const markAllNotificationsAsRead = () => {
+    setNotifications(notifications.map(n => ({ ...n, read: true })));
+  };
+  
+  const handleClassSectionChange = (classSectionId) => {
+    setSelectedClassSection(classSectionId);
+    setSelectedSubjects([]);
+    setShowSetupPrompt(false);
+  };
+  
+  const handleSubjectSelection = (subjects) => {
+    setSelectedSubjects(subjects);
+  };
 
   const renderContent = () => {
+    // If no class section is selected, show the selector
+    if (showSetupPrompt) {
+  return (
+        <div className="setup-prompt">
+          <ClassSectionSelector 
+            classSections={classSections}
+            subjectsByClass={subjectsByClass}
+            onClassSectionChange={handleClassSectionChange}
+            onSubjectSelection={handleSubjectSelection}
+          />
+    </div>
+  );
+    }
+    
+    // Otherwise show the selected route
     return (
       <Routes>
-        <Route index element={<TeacherHome />} />
-        <Route path="assignments" element={<AssignmentsManager />} />
-        <Route path="grading" element={<GradingTool />} />
-        <Route path="attendance" element={<AttendanceTracker />} />
-        <Route path="announcements" element={<AnnouncementsManager />} />
-        <Route path="notes" element={<NotesManager />} />
-        <Route path="*" element={<TeacherHome />} />
+        <Route index element={
+          <MySubjects 
+            classSection={selectedClassSection} 
+            subjects={selectedSubjects} 
+            subjectData={subjectsByClass[selectedClassSection] || []}
+          />
+        } />
+        <Route path="upload-questions" element={
+          <UploadQuestions 
+            classSection={selectedClassSection} 
+            subjects={selectedSubjects} 
+          />
+        } />
+        <Route path="assignments" element={
+          <Assignments 
+            classSection={selectedClassSection} 
+            subjects={selectedSubjects} 
+          />
+        } />
+        <Route path="notes" element={
+          <Notes 
+            classSection={selectedClassSection} 
+            subjects={selectedSubjects} 
+          />
+        } />
+        <Route path="students" element={
+          <Students 
+            classSection={selectedClassSection} 
+            subjects={selectedSubjects} 
+          />
+        } />
+        <Route path="practice-tests" element={
+          <PracticeTests 
+            classSection={selectedClassSection} 
+            subjects={selectedSubjects} 
+          />
+        } />
+        <Route path="*" element={
+          <MySubjects 
+            classSection={selectedClassSection} 
+            subjects={selectedSubjects} 
+            subjectData={subjectsByClass[selectedClassSection] || []}
+          />
+        } />
       </Routes>
     );
   };
@@ -582,34 +229,117 @@ const TeacherDashboard = () => {
     <div className="teacher-dashboard">
       <div className="teacher-sidebar">
         <div className="sidebar-header">
-          <img src="https://via.placeholder.com/50" alt="Teacher" className="teacher-avatar" />
-          <h3>Prof. Smith</h3>
-          <p className="teacher-title">Mathematics</p>
+          <div className="profile-picture" onClick={() => setShowProfileDropdown(!showProfileDropdown)} ref={profileRef}>
+            <div className="default-avatar">
+              <FaUserCircle />
+              <div className="avatar-badge"></div>
+            </div>
+          </div>
+          <div className="profile-info">
+            <h3>{currentUser ? currentUser.fullName : 'Teacher'}</h3>
+            <p className="teacher-info">{currentUser ? currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1) : 'Teacher'}</p>
+          </div>
+          
+          {showProfileDropdown && (
+            <div className="profile-dropdown">
+              <div className="dropdown-item">
+                <FaUserCircle /> My Profile
+              </div>
+              <div className="dropdown-item">
+                <FaCog /> Settings
+              </div>
+              <div className="dropdown-item" onClick={handleLogout}>
+                <FaSignOutAlt /> Logout
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="notification-bell" onClick={() => setShowNotifications(!showNotifications)} ref={notificationRef}>
+          <FaBell />
+          {notifications.filter(n => !n.read).length > 0 && (
+            <span className="notification-badge">{notifications.filter(n => !n.read).length}</span>
+          )}
+          
+          {showNotifications && (
+            <div className="notifications-dropdown">
+              <div className="notifications-header">
+                <h4>Notifications</h4>
+                <button className="mark-all-read" onClick={markAllNotificationsAsRead}>Mark all as read</button>
+              </div>
+              <div className="notifications-list">
+                {notifications.length > 0 ? (
+                  notifications.map(notification => (
+                    <div 
+                      key={notification.id} 
+                      className={`notification-item ${notification.read ? 'read' : 'unread'}`}
+                    >
+                      <p>{notification.text}</p>
+                    </div>
+                  ))
+                ) : (
+                  <div className="no-notifications">
+                    <p>No notifications</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="sidebar-section">
-          <div className="section-title">Teaching</div>
+          <div className="section-title">
+            <FaGraduationCap className="section-icon" /> Teaching
+          </div>
           <nav className="sidebar-nav">
             <Link to="/teacher" className={pathname === '/teacher' ? 'active' : ''}>
-              <FaChalkboardTeacher /> Dashboard
+              <FaHome /> <span>My Subjects</span>
+            </Link>
+            <Link to="/teacher/upload-questions" className={pathname.includes('/teacher/upload-questions') ? 'active' : ''}>
+              <FaFileUpload /> <span>Upload Questions</span>
             </Link>
             <Link to="/teacher/assignments" className={pathname.includes('/teacher/assignments') ? 'active' : ''}>
-              <FaClipboardList /> Assignments
+              <FaClipboardList /> <span>Assignments</span>
             </Link>
             <Link to="/teacher/notes" className={pathname.includes('/teacher/notes') ? 'active' : ''}>
-              <FaFileAlt /> Notes & Materials
+              <FaBook /> <span>Notes</span>
             </Link>
-            <Link to="/teacher/grading" className={pathname.includes('/teacher/grading') ? 'active' : ''}>
-              <FaCalculator /> Grading
+            <Link to="/teacher/students" className={pathname.includes('/teacher/students') ? 'active' : ''}>
+              <FaChalkboardTeacher /> <span>Students</span>
             </Link>
-            <Link to="/teacher/attendance" className={pathname.includes('/teacher/attendance') ? 'active' : ''}>
-              <FaUserCheck /> Attendance
-            </Link>
-            <Link to="/teacher/announcements" className={pathname.includes('/teacher/announcements') ? 'active' : ''}>
-              <FaBullhorn /> Announcements
+            <Link to="/teacher/practice-tests" className={pathname.includes('/teacher/practice-tests') ? 'active' : ''}>
+              <FaRocket /> <span>Practice Tests</span>
             </Link>
           </nav>
         </div>
+        
+        {selectedClassSection && (
+          <div className="sidebar-selection-info">
+            <h4>Current Selection</h4>
+            <div className="selection-item">
+              <strong>Class/Section:</strong> 
+              <span>{classSections.find(cs => cs.id === selectedClassSection)?.name || selectedClassSection}</span>
+            </div>
+            {selectedSubjects.length > 0 && (
+              <div className="selection-item">
+                <strong>Subjects:</strong>
+                <ul>
+                  {selectedSubjects.map(subjectId => (
+                    <li key={subjectId}>
+                      {subjectsByClass[selectedClassSection]?.find(s => s.id === subjectId)?.name || subjectId}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            <button 
+              className="change-selection-btn"
+              onClick={() => setShowSetupPrompt(true)}
+            >
+              Change Selection
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="teacher-content">
