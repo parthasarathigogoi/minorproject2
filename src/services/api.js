@@ -1,6 +1,13 @@
 // Base API URL - change this to your actual backend URL
 const API_BASE_URL = 'http://localhost:5000/api';
 
+// Helper function to create a timeout signal
+const createTimeoutSignal = (timeoutMs) => {
+  const controller = new AbortController();
+  setTimeout(() => controller.abort(), timeoutMs);
+  return controller.signal;
+};
+
 // Helper function for making API requests
 const fetchWithAuth = async (endpoint, options = {}) => {
   // Get auth token from localStorage (you would implement your auth system)
@@ -14,22 +21,35 @@ const fetchWithAuth = async (endpoint, options = {}) => {
     defaultHeaders.Authorization = `Bearer ${token}`;
   }
   
-  const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
-    ...options,
-    headers: {
-      ...defaultHeaders,
-      ...options.headers,
-    },
-  });
-  
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({
-      message: 'An unknown error occurred',
-    }));
-    throw new Error(error.message || `API Error: ${response.status}`);
+  try {
+    const response = await fetch(`${API_BASE_URL}/${endpoint}`, {
+      ...options,
+      headers: {
+        ...defaultHeaders,
+        ...options.headers,
+      },
+      // Add a timeout to prevent long waits
+      signal: options.signal || createTimeoutSignal(10000),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({
+        message: 'An unknown error occurred',
+      }));
+      throw new Error(error.message || `API Error: ${response.status}`);
+    }
+    
+    return response.json();
+  } catch (error) {
+    console.error(`API request failed for ${endpoint}:`, error);
+    
+    // Handle timeout errors specifically
+    if (error.name === 'AbortError') {
+      throw new Error('Request timed out. Please try again later.');
+    }
+    
+    throw error;
   }
-  
-  return response.json();
 };
 
 // Question-related API calls
@@ -44,6 +64,22 @@ export const questionApi = {
     return fetchWithAuth('questions/practice', {
       method: 'POST',
       body: JSON.stringify(filters),
+    });
+  },
+  
+  // Get questions by subject and filters for students
+  getStudentQuestions: async (filters) => {
+    return fetchWithAuth('questions/student/filter', {
+      method: 'POST',
+      body: JSON.stringify(filters),
+    });
+  },
+  
+  // Create a custom test from selected questions
+  createCustomTest: async (testData) => {
+    return fetchWithAuth('practice-tests/custom', {
+      method: 'POST',
+      body: JSON.stringify(testData),
     });
   },
   
@@ -63,6 +99,57 @@ export const questionApi = {
   // Get a specific exam result by ID
   getExamResultById: async (examId) => {
     return fetchWithAuth(`exams/results/${examId}`);
+  },
+};
+
+// Practice Test API calls
+export const practiceTestApi = {
+  // Get all practice tests available to the current user
+  getAllTests: async () => {
+    return fetchWithAuth('practice-tests');
+  },
+  
+  // Get a specific practice test by ID
+  getTestById: async (testId) => {
+    return fetchWithAuth(`practice-tests/${testId}`);
+  },
+  
+  // Create a new practice test (teacher only)
+  createTest: async (testData) => {
+    return fetchWithAuth('practice-tests', {
+      method: 'POST',
+      body: JSON.stringify(testData),
+    });
+  },
+  
+  // Create a custom test from selected questions (student)
+  createCustomTest: async (testData) => {
+    return fetchWithAuth('practice-tests/custom', {
+      method: 'POST',
+      body: JSON.stringify(testData),
+    });
+  },
+  
+  // Update a practice test (teacher only)
+  updateTest: async (testId, testData) => {
+    return fetchWithAuth(`practice-tests/${testId}`, {
+      method: 'PUT',
+      body: JSON.stringify(testData),
+    });
+  },
+  
+  // Delete a practice test (teacher only)
+  deleteTest: async (testId) => {
+    return fetchWithAuth(`practice-tests/${testId}`, {
+      method: 'DELETE',
+    });
+  },
+  
+  // Toggle publish status of a practice test (teacher only)
+  togglePublishStatus: async (testId) => {
+    return fetchWithAuth(`practice-tests/${testId}/publish`, {
+      method: 'PATCH',
+    });
   },
 };
 

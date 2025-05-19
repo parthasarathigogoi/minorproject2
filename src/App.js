@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import './styles/Auth.css';
 import './styles/Common.css';
+import './styles/PracticeTests.css';
+import './styles/CustomTestBuilder.css';
 
 // Lazy load components for code splitting
 const TeacherDashboard = lazy(() => import('./components/Teacher/TeacherDashboard'));

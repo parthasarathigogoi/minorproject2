@@ -11,6 +11,7 @@ const questionRoutes = require('./routes/questionRoutes');
 const authRoutes = require('./routes/authRoutes');
 const classSectionRoutes = require('./routes/classSectionRoutes');
 const teacherSubjectRoutes = require('./routes/teacherSubjectRoutes');
+// Routes we've added placeholders for
 const assignmentRoutes = require('./routes/assignmentRoutes');
 const noteRoutes = require('./routes/noteRoutes');
 const practiceTestRoutes = require('./routes/practiceTestRoutes');
@@ -39,6 +40,7 @@ app.use('/api/questions', questionRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/class-sections', classSectionRoutes);
 app.use('/api/teacher-subjects', teacherSubjectRoutes);
+// Route handlers for our placeholders
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/notes', noteRoutes);
 app.use('/api/practice-tests', practiceTestRoutes);

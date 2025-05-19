@@ -1,6 +1,13 @@
 // Base API URL
 const API_BASE_URL = 'http://localhost:5000/api';
 
+// Helper function to create a timeout signal
+const createTimeoutSignal = (timeoutMs) => {
+  const controller = new AbortController();
+  setTimeout(() => controller.abort(), timeoutMs);
+  return controller.signal;
+};
+
 // Mock user database to store registered users
 let mockUsers = [
   {
@@ -73,27 +80,37 @@ const authApi = {
   // Login user
   login: async (email, password) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      try {
+        // First try the real API
+        const response = await fetch(`${API_BASE_URL}/auth/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+          // Add a timeout to prevent long waits if server is down
+          signal: createTimeoutSignal(5000),
+        });
 
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.message || 'Login failed');
+        }
+        
+        // Store token and user info in localStorage
+        if (data.token) {
+          localStorage.setItem('authToken', data.token);
+          localStorage.setItem('user', JSON.stringify(data.user));
+        }
+        
+        return data;
+      } catch (apiError) {
+        console.warn('API login failed, falling back to mock authentication:', apiError);
+        
+        // If API call fails, try mock authentication as fallback
+        return await mockAuthApi.login(email, password);
       }
-      
-      // Store token and user info in localStorage
-      if (data.token) {
-        localStorage.setItem('authToken', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-      }
-      
-      return data;
     } catch (error) {
       console.error('Login error:', error);
       throw error;
@@ -109,19 +126,33 @@ const authApi = {
     }
     
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/me`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/me`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+          // Add a timeout to prevent long waits if server is down
+          signal: createTimeoutSignal(5000),
+        });
 
-      const data = await response.json();
-      
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to get user profile');
+        const data = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(data.message || 'Failed to get user profile');
+        }
+        
+        return data;
+      } catch (apiError) {
+        console.warn('API getCurrentUser failed, falling back to localStorage:', apiError);
+        
+        // Fallback to stored user data
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+          return JSON.parse(userStr);
+        }
+        
+        throw apiError;
       }
-      
-      return data;
     } catch (error) {
       console.error('Get current user error:', error);
       throw error;

@@ -3,6 +3,8 @@ const router = express.Router();
 const Question = require('../models/Question');
 const TeacherSubject = require('../models/TeacherSubject');
 const { authMiddleware, teacherAuthMiddleware } = require('../middleware/authMiddleware');
+const auth = require('../middleware/auth');
+const { isTeacher, isStudent } = require('../middleware/roleCheck');
 
 // Get all questions (with filters)
 router.get('/', authMiddleware, async (req, res) => {
@@ -206,6 +208,152 @@ router.get('/filter/subject-class', teacherAuthMiddleware, async (req, res) => {
   } catch (error) {
     console.error('Error fetching questions by subject and class:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get all questions (admin/teacher only)
+router.get('/', auth, async (req, res) => {
+  try {
+    const questions = await Question.find()
+      .populate('subject', 'name code')
+      .populate('classSection', 'name')
+      .sort({ createdAt: -1 });
+    res.json(questions);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching questions', error: error.message });
+  }
+});
+
+// Get questions by subject and filters for students
+router.post('/student/filter', [auth, isStudent], async (req, res) => {
+  try {
+    const { 
+      subjectId, 
+      difficultyLevel, 
+      questionTypes, 
+      topic,
+      limit 
+    } = req.body;
+    
+    // Build query
+    const query = {
+      classSection: req.user.classSection
+    };
+    
+    // Add subject filter if provided
+    if (subjectId) {
+      query.subject = subjectId;
+    }
+    
+    // Add difficulty filter if provided
+    if (difficultyLevel && difficultyLevel !== 'all') {
+      query.difficultyLevel = difficultyLevel;
+    }
+    
+    // Add question type filter if provided
+    if (questionTypes && questionTypes.length > 0) {
+      query.type = { $in: questionTypes };
+    }
+    
+    // Add topic filter if provided
+    if (topic) {
+      query.topic = { $regex: topic, $options: 'i' };
+    }
+    
+    // Fetch questions based on query
+    const questions = await Question.find(query)
+      .populate('subject', 'name code')
+      .limit(limit || 100)
+      .sort({ createdAt: -1 });
+    
+    res.json(questions);
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Error fetching questions', 
+      error: error.message 
+    });
+  }
+});
+
+// Get question by ID
+router.get('/:id', auth, async (req, res) => {
+  try {
+    const question = await Question.findById(req.params.id)
+      .populate('subject', 'name code')
+      .populate('classSection', 'name')
+      .populate('createdBy', 'fullName');
+      
+    if (!question) {
+      return res.status(404).json({ message: 'Question not found' });
+    }
+    
+    res.json(question);
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching question', error: error.message });
+  }
+});
+
+// Create new question (teacher only)
+router.post('/', [auth, isTeacher], async (req, res) => {
+  try {
+    const questionData = {
+      ...req.body,
+      createdBy: req.user._id
+    };
+    
+    const question = new Question(questionData);
+    await question.save();
+    
+    res.status(201).json(question);
+  } catch (error) {
+    res.status(500).json({ message: 'Error creating question', error: error.message });
+  }
+});
+
+// Update question (teacher only)
+router.put('/:id', [auth, isTeacher], async (req, res) => {
+  try {
+    const question = await Question.findById(req.params.id);
+    
+    if (!question) {
+      return res.status(404).json({ message: 'Question not found' });
+    }
+    
+    // Check if teacher owns this question
+    if (question.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Access denied to this question' });
+    }
+    
+    const updatedQuestion = await Question.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true }
+    );
+    
+    res.json(updatedQuestion);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating question', error: error.message });
+  }
+});
+
+// Delete question (teacher only)
+router.delete('/:id', [auth, isTeacher], async (req, res) => {
+  try {
+    const question = await Question.findById(req.params.id);
+    
+    if (!question) {
+      return res.status(404).json({ message: 'Question not found' });
+    }
+    
+    // Check if teacher owns this question
+    if (question.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'Access denied to this question' });
+    }
+    
+    await Question.findByIdAndDelete(req.params.id);
+    res.json({ message: 'Question deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error deleting question', error: error.message });
   }
 });
 
