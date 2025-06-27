@@ -17,10 +17,11 @@ const SubjectSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
-  teachers: [{
+  teacher: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
+    ref: 'User',
+    required: true
+  },
   students: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'

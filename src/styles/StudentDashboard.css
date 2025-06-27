@@ -300,6 +300,25 @@
   color: #3563e9;
 }
 
+.sidebar-link.logout-btn {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: none;
+  border: none;
+  color: #5c6370;
+  padding: 12px 20px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  text-align: left;
+}
+
+.sidebar-link.logout-btn:hover {
+  background-color: #f0f4f8;
+  color: #3563e9;
+}
+
 /* Content Area */
 .student-content {
   flex: 1;

@@ -3,7 +3,7 @@ import { Routes, Route, Link, useLocation, useNavigate, NavLink, Navigate } from
 import { useBranding } from '../../context/BrandingContext';
 import { useExam } from '../../context/ExamContext';
 import { useAuth } from '../../context/AuthContext';
-import { FaUserGraduate, FaBookOpen, FaClipboardList, FaBook, FaFileAlt, FaCalendarAlt, FaClipboardCheck, FaPencilAlt, FaClock, FaLink, FaFileUpload, FaTasks, FaCheckCircle, FaFileDownload, FaExclamationTriangle, FaHome, FaChartBar, FaComments, FaUserCircle, FaCog, FaSignOutAlt, FaBell, FaGraduationCap, FaBrain, FaPlus } from 'react-icons/fa';
+import { FaUserGraduate, FaBookOpen, FaClipboardList, FaBook, FaFileAlt, FaCalendarAlt, FaClipboardCheck, FaPencilAlt, FaClock, FaLink, FaFileUpload, FaTasks, FaCheckCircle, FaFileDownload, FaExclamationTriangle, FaHome, FaChartBar, FaComments, FaUserCircle, FaCog, FaSignOutAlt, FaBell, FaGraduationCap, FaBrain, FaPlus, FaUsers } from 'react-icons/fa';
 import '../../styles/StudentDashboard.css';
 import '../../styles/PracticeTestBuilder.css';
 import '../../styles/CustomTestBuilder.css';
@@ -13,19 +13,17 @@ import PracticeTestBuilder from './PracticeTestBuilder';
 import CustomTestBuilder from './CustomTestBuilder';
 import StudentProfile from './StudentProfile';
 import ExamInterface from './ExamInterface';
+import JoinSubjectForm from './JoinSubjectForm';
+import StudentViewQuestions from './StudentViewQuestions';
 
 // Student-specific components
-const StudentHome = () => {
+const StudentHome = ({ refreshKey, setShowJoinModal }) => {
   const { currentUser } = useAuth();
   const navigate = useNavigate();
-  const [showJoinModal, setShowJoinModal] = useState(false);
-  
-  // Dummy data for enrolled classes
-  const enrolledClasses = [
-    { id: 1, name: 'Mathematics 101', teacher: 'Prof. Smith', color: '#3563E9' },
-    { id: 2, name: 'Physics', teacher: 'Dr. Johnson', color: '#00C853' },
-    { id: 3, name: 'Computer Science', teacher: 'Prof. Davis', color: '#FF6D00' },
-  ];
+  const [enrolledClasses, setEnrolledClasses] = useState([]);
+  const [loadingClasses, setLoadingClasses] = useState(true);
+  const [error, setError] = useState('');
+  const [viewQuestionsSubject, setViewQuestionsSubject] = useState(null);
   
   // Dummy data for upcoming assignments
   const upcomingAssignments = [
@@ -56,6 +54,54 @@ const StudentHome = () => {
     navigate('/student/exam/practice');
   };
 
+  // Add state for today's tasks
+  const [todaysTasks, setTodaysTasks] = useState([
+    { id: 1, name: 'Read Physics Chapter 5', class: 'Physics', completed: true },
+    { id: 2, name: 'Watch Math Video Lecture', class: 'Mathematics 101', completed: true },
+    { id: 3, name: 'Complete CS Quiz', class: 'Computer Science', completed: true },
+    { id: 4, name: 'Submit Math Assignment', class: 'Mathematics 101', completed: false },
+    { id: 5, name: 'Review Lab Notes', class: 'Physics', completed: false },
+  ]);
+
+  // Handler to cancel a task
+  const handleCancelTask = (id) => {
+    setTodaysTasks(tasks => tasks.filter(task => task.id !== id));
+  };
+
+  // State for minimizing today's tasks
+  const [tasksMinimized, setTasksMinimized] = useState(false);
+
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      setLoadingClasses(true);
+      setError('');
+      try {
+        const res = await fetch('/api/subjects/student', {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+          }
+        });
+        const data = await res.json();
+        if (res.ok) {
+          setEnrolledClasses(data.map((subject, idx) => ({
+            id: subject._id,
+            name: subject.name,
+            code: subject.code,
+            teacher: subject.teacher || '',
+            color: ['#3563E9', '#00C853', '#FF6D00'][idx % 3],
+            students: subject.students || []
+          })));
+        } else {
+          setError(data.message || 'Failed to fetch subjects');
+        }
+      } catch (err) {
+        setError('Network error');
+      }
+      setLoadingClasses(false);
+    };
+    fetchSubjects();
+  }, [refreshKey]);
+
   return (
     <div className="student-home">
       <section className="welcome-banner">
@@ -82,14 +128,6 @@ const StudentHome = () => {
       <section className="quick-actions">
         <h3>Quick Actions</h3>
         <div className="action-tiles">
-          <div className="action-tile" onClick={() => setShowJoinModal(true)}>
-            <div className="tile-icon join">
-              <FaLink />
-            </div>
-            <h4>Join Class</h4>
-            <p>With code or link</p>
-          </div>
-          
           <div className="action-tile">
             <div className="tile-icon notes">
               <FaBookOpen />
@@ -117,25 +155,32 @@ const StudentHome = () => {
       </section>
       
       <div className="dashboard-grid">
-        <section className="classes-section">
+        {/* Joined Subjects Section */}
+        <section className="joined-subjects-section">
           <div className="section-header">
-            <h3>Your Classes</h3>
-            <button className="view-all-btn">View All</button>
+            <h3>Joined Subjects</h3>
           </div>
           <div className="classes-list">
-            {enrolledClasses.map(class_ => (
-              <div className="class-card" key={class_.id}>
-                <div className="class-color" style={{ backgroundColor: class_.color }}></div>
-                <div className="class-details">
-                  <h4>{class_.name}</h4>
-                  <p className="class-teacher"><FaUserGraduate /> {class_.teacher}</p>
-                  <div className="class-actions">
-                    <button className="class-btn">Materials</button>
-                    <button className="class-btn">Assignments</button>
+            {enrolledClasses.length > 0 ? (
+              enrolledClasses.map(class_ => (
+                <div className="class-card" key={class_.id}>
+                  <div className="class-color" style={{ backgroundColor: class_.color }}></div>
+                  <div className="class-details">
+                    <h4>{class_.name}</h4>
+                    <p className="class-code">Code: {class_.code}</p>
+                    <p className="class-teacher"><FaUserGraduate /> {class_.teacher?.fullName || ''} {class_.teacher?.email ? `(${class_.teacher.email})` : ''}</p>
+                    <p className="class-students"><FaUsers /> {class_.students ? class_.students.length : 0} students</p>
+                    <div className="class-actions">
+                      <button className="class-btn">Materials</button>
+                      <button className="class-btn">Assignments</button>
+                      <button className="class-btn" onClick={() => setViewQuestionsSubject(class_)}>View Questions</button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <div>No joined subjects yet. Join a class to get started!</div>
+            )}
             <div className="join-class-card" onClick={() => setShowJoinModal(true)}>
               <div className="add-icon">+</div>
               <p>Join New Class</p>
@@ -227,92 +272,75 @@ const StudentHome = () => {
         </section>
       </div>
       
-      {/* Join Class Modal */}
-      {showJoinModal && (
+      {/* Task Progress Sidebar - Mobile Friendly */}
+      <div className="task-progress">
+        <div className="progress-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <h3 style={{ display: 'inline-block', marginRight: 8 }}>Today's Tasks</h3>
+            <span className="task-count">{todaysTasks.filter(t => t.completed).length}/{todaysTasks.length} Complete</span>
+          </div>
+          {tasksMinimized ? (
+            <button
+              className="cancel-btn"
+              style={{ fontSize: 18, padding: '2px 8px', marginLeft: 8 }}
+              title="Show Tasks"
+              onClick={() => setTasksMinimized(false)}
+            >
+              ▼
+            </button>
+          ) : (
+            <button
+              className="cancel-btn"
+              style={{ fontSize: 18, padding: '2px 8px', marginLeft: 8 }}
+              title="Minimize"
+              onClick={() => setTasksMinimized(true)}
+            >
+              ×
+            </button>
+          )}
+        </div>
+        {!tasksMinimized && (
+          <>
+            <div className="progress-bar">
+              <div className="progress-fill" style={{ width: `${(todaysTasks.filter(t => t.completed).length / (todaysTasks.length || 1)) * 100}%` }}></div>
+            </div>
+            <div className="task-list">
+              {todaysTasks.map(task => (
+                <div className={`task-item${task.completed ? ' completed' : ''}`} key={task.id}>
+                  {task.completed ? (
+                    <FaCheckCircle className="task-icon" />
+                  ) : (
+                    <FaTasks className="task-icon" />
+                  )}
+                  <div className="task-details">
+                    <span className="task-name">{task.name}</span>
+                    <span className="task-class">{task.class}</span>
+                  </div>
+                  {!task.completed && (
+                    <button className="cancel-btn" style={{ marginLeft: 8 }} onClick={() => handleCancelTask(task.id)}>
+                      Cancel
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+      {/* View Questions Modal */}
+      {viewQuestionsSubject && (
         <div className="modal-overlay">
-          <div className="modal-content">
+          <div className="modal-content" style={{ maxWidth: 900, width: '95%' }}>
             <div className="modal-header">
-              <h3>Join a Class</h3>
-              <button className="close-btn" onClick={() => setShowJoinModal(false)}>×</button>
+              <h3>Questions for {viewQuestionsSubject.name}</h3>
+              <button className="close-btn" onClick={() => setViewQuestionsSubject(null)}>×</button>
             </div>
             <div className="modal-body">
-              <div className="join-options">
-                <div className="join-option">
-                  <input type="radio" id="join-code" name="join-type" defaultChecked />
-                  <label htmlFor="join-code">Join with Class Code</label>
-                </div>
-                <div className="join-option">
-                  <input type="radio" id="join-link" name="join-type" />
-                  <label htmlFor="join-link">Join with Invitation Link</label>
-                </div>
-              </div>
-              
-              <div className="join-code-input">
-                <label>Enter Class Code</label>
-                <input type="text" placeholder="e.g., MATH101-ABC123" />
-                <p className="help-text">Class codes are usually provided by your teacher and look like "SUBJECT-CODE123"</p>
-              </div>
-              
-              <div className="terms-checkbox">
-                <input type="checkbox" id="agree-terms" />
-                <label htmlFor="agree-terms">I confirm this is a class I'm enrolled in</label>
-              </div>
-            </div>
-            <div className="modal-footer">
-              <button className="cancel-btn" onClick={() => setShowJoinModal(false)}>Cancel</button>
-              <button className="join-btn">Join Class</button>
+              <StudentViewQuestions subjectId={viewQuestionsSubject.id} />
             </div>
           </div>
         </div>
       )}
-
-      {/* Task Progress Sidebar - Mobile Friendly */}
-      <div className="task-progress">
-        <div className="progress-header">
-          <h3>Today's Tasks</h3>
-          <span className="task-count">3/5 Complete</span>
-        </div>
-        <div className="progress-bar">
-          <div className="progress-fill" style={{ width: '60%' }}></div>
-        </div>
-        <div className="task-list">
-          <div className="task-item completed">
-            <FaCheckCircle className="task-icon" />
-            <div className="task-details">
-              <span className="task-name">Read Physics Chapter 5</span>
-              <span className="task-class">Physics</span>
-            </div>
-          </div>
-          <div className="task-item completed">
-            <FaCheckCircle className="task-icon" />
-            <div className="task-details">
-              <span className="task-name">Watch Math Video Lecture</span>
-              <span className="task-class">Mathematics 101</span>
-            </div>
-          </div>
-          <div className="task-item completed">
-            <FaCheckCircle className="task-icon" />
-            <div className="task-details">
-              <span className="task-name">Complete CS Quiz</span>
-              <span className="task-class">Computer Science</span>
-            </div>
-          </div>
-          <div className="task-item">
-            <FaTasks className="task-icon" />
-            <div className="task-details">
-              <span className="task-name">Submit Math Assignment</span>
-              <span className="task-class">Mathematics 101</span>
-            </div>
-          </div>
-          <div className="task-item">
-            <FaTasks className="task-icon" />
-            <div className="task-details">
-              <span className="task-name">Review Lab Notes</span>
-              <span className="task-class">Physics</span>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
@@ -568,6 +596,8 @@ const StudentDashboard = () => {
   const [activeSection, setActiveSection] = useState('home');
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [showJoinModal, setShowJoinModal] = useState(false);
   
   const profileRef = useRef(null);
   const notificationRef = useRef(null);
@@ -598,10 +628,15 @@ const StudentDashboard = () => {
     setNotifications(notifications.map(n => ({ ...n, read: true })));
   };
 
+  const handleJoined = () => {
+    setRefreshKey(k => k + 1);
+    // Optionally close modal or show notification
+  };
+
   const renderContent = () => {
     return (
       <Routes>
-        <Route index element={<StudentHome />} />
+        <Route index element={<StudentHome refreshKey={refreshKey} setShowJoinModal={setShowJoinModal} />} />
         <Route path="courses" element={<CoursesList />} />
         <Route path="assignments" element={<StudentAssignments />} />
         <Route path="grades" element={<Grades />} />
@@ -713,6 +748,13 @@ const StudentDashboard = () => {
             <Link to="/student/custom-test" className={pathname.includes('/student/custom-test') ? 'active' : ''}>
               <FaPlus /> <span>Create Custom Test</span>
             </Link>
+            <button
+              className="sidebar-link logout-btn"
+              style={{ display: 'flex', alignItems: 'center', width: '100%', background: 'none', border: 'none', color: 'inherit', padding: '10px 20px', cursor: 'pointer' }}
+              onClick={handleLogout}
+            >
+              <FaSignOutAlt style={{ marginRight: 8 }} /> <span>Logout</span>
+            </button>
           </nav>
         </div>
       </div>
@@ -720,6 +762,21 @@ const StudentDashboard = () => {
       <div className="student-content">
         {renderContent()}
       </div>
+
+      {/* Join Class Modal */}
+      {showJoinModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h3>Join a Class</h3>
+              <button className="close-btn" onClick={() => setShowJoinModal(false)}>×</button>
+            </div>
+            <div className="modal-body">
+              <JoinSubjectForm onJoined={handleJoined} onSuccess={() => setShowJoinModal(false)} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

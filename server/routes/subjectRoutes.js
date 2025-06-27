@@ -2,20 +2,20 @@ const express = require('express');
 const router = express.Router();
 const Subject = require('../models/Subject');
 const auth = require('../middleware/auth');
+const generateCode = require('../utils/generateCode');
+const { authMiddleware } = require('../middleware/authMiddleware');
 
 // Get all subjects that the student is enrolled in
 // GET /api/subjects/student
 router.get('/student', auth, async (req, res) => {
   try {
+    // Ensure we use the correct user ID type for querying
+    const studentId = req.user._id || req.user.id;
     // Find subjects where the student ID is in the students array
     const subjects = await Subject.find({
-      students: req.user.id
-    });
-    
-    // Return just the subject names for simplicity
-    const subjectNames = subjects.map(subject => subject.name);
-    
-    res.json(subjectNames);
+      students: studentId
+    }).populate('teacher', 'fullName email').populate('students', 'fullName email');
+    res.json(subjects);
   } catch (err) {
     console.error('Error fetching student subjects:', err);
     res.status(500).json({ message: 'Server error' });
@@ -31,9 +31,9 @@ router.get('/teacher', auth, async (req, res) => {
       return res.status(403).json({ message: 'Access denied' });
     }
     
-    // Find subjects where the teacher ID is in the teachers array
+    // Find subjects where the teacher ID is in the teacher field
     const subjects = await Subject.find({
-      teachers: req.user.id
+      teacher: req.user.id
     });
     
     res.json(subjects);
@@ -153,6 +153,57 @@ router.get('/', auth, async (req, res) => {
   } catch (err) {
     console.error('Error fetching subjects:', err);
     res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Teacher creates a subject
+router.post('/create', auth, async (req, res) => {
+  console.log('POST /api/subjects/create request received');
+  try {
+    if (req.user.role !== 'teacher') return res.status(403).json({ message: 'Only teachers can create subjects' });
+    const { name } = req.body;
+    let code;
+    let exists = true;
+    // Ensure unique code
+    while (exists) {
+      code = generateCode();
+      exists = await Subject.findOne({ code });
+    }
+    const subject = new Subject({
+      name,
+      code,
+      teacher: req.user.id,
+      students: []
+    });
+    await subject.save();
+    res.status(201).json(subject);
+  } catch (err) {
+    if (err.code === 11000 && err.keyPattern && err.keyPattern.name) {
+      // Duplicate subject name
+      return res.status(400).json({ message: 'A subject with this name already exists.' });
+    }
+    console.error('Error creating subject:', err);
+    res.status(500).json({ message: 'Error creating subject', error: err.message });
+  }
+});
+
+// Student joins a subject by code
+router.post('/join', auth, async (req, res) => {
+  try {
+    if (req.user.role !== 'student') return res.status(403).json({ message: 'Only students can join subjects' });
+    const { code } = req.body;
+    const subject = await Subject.findOne({ code });
+    if (!subject) {
+      return res.status(404).json({ message: 'Invalid subject code' });
+    }
+    if (subject.students.includes(req.user.id)) {
+      return res.status(400).json({ message: 'Already joined this subject' });
+    }
+    subject.students.push(req.user.id);
+    await subject.save();
+    res.status(200).json({ message: 'Joined subject successfully', subject });
+  } catch (err) {
+    res.status(500).json({ message: 'Error joining subject', error: err.message });
   }
 });
 

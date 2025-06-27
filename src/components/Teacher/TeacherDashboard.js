@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { FaClipboardList, FaFileUpload, FaChalkboardTeacher, FaShareAlt, FaBook, FaClipboard, FaCalculator, FaFileAlt, FaRocket, FaUserCheck, FaBullhorn, FaUserCircle, FaCog, FaSignOutAlt, FaBell, FaGraduationCap, FaHome, FaChartBar, FaClipboardCheck, FaCalendarAlt, FaUsers } from 'react-icons/fa';
+import { FaClipboardList, FaFileUpload, FaChalkboardTeacher, FaShareAlt, FaBook, FaClipboard, FaCalculator, FaFileAlt, FaRocket, FaUserCheck, FaBullhorn, FaUserCircle, FaCog, FaSignOutAlt, FaBell, FaGraduationCap, FaHome, FaChartBar, FaClipboardCheck, FaCalendarAlt, FaUsers, FaPlus } from 'react-icons/fa';
 import '../../styles/TeacherDashboard.css';
 import NotesViewer from '../common/NotesViewer';
 import AssignmentManager from '../common/AssignmentManager';
@@ -14,6 +14,7 @@ import Notes from './Sections/Notes';
 import Students from './Sections/Students';
 import PracticeTests from './Sections/PracticeTests';
 import ClassSectionSelector from './ClassSectionSelector';
+import CreateSubjectForm from './CreateSubjectForm';
 
 const TeacherDashboard = () => {
   const { pathname } = useLocation();
@@ -37,6 +38,9 @@ const TeacherDashboard = () => {
   
   const profileRef = useRef(null);
   const notificationRef = useRef(null);
+
+  const [showCreateSubject, setShowCreateSubject] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   // Fetch class sections and subjects on component mount
   useEffect(() => {
@@ -159,7 +163,16 @@ const TeacherDashboard = () => {
     setSelectedSubjects(subjects);
   };
 
+  const handleEnterSubject = (subject) => {
+    setShowCreateSubject(false);
+    setRefreshKey(k => k + 1);
+    navigate('/teacher'); // Go to dashboard home (MySubjects)
+  };
+
   const renderContent = () => {
+    if (showCreateSubject) {
+      return <CreateSubjectForm onSubjectCreated={() => setShowCreateSubject(false)} onEnterSubject={handleEnterSubject} />;
+    }
     // If no class section is selected, show the selector
     if (showSetupPrompt) {
   return (
@@ -178,11 +191,7 @@ const TeacherDashboard = () => {
     return (
       <Routes>
         <Route index element={
-          <MySubjects 
-            classSection={selectedClassSection} 
-            subjects={selectedSubjects} 
-            subjectData={subjectsByClass[selectedClassSection] || []}
-          />
+          <MySubjects refreshKey={refreshKey} />
         } />
         <Route path="upload-questions" element={
           <UploadQuestions 
@@ -295,6 +304,13 @@ const TeacherDashboard = () => {
             <Link to="/teacher" className={pathname === '/teacher' ? 'active' : ''}>
               <FaHome /> <span>My Subjects</span>
             </Link>
+            <button
+              className="sidebar-link bg-blue-100 hover:bg-blue-200 text-blue-700 font-semibold rounded mb-2"
+              style={{ width: '100%', textAlign: 'left', padding: '12px 20px', marginBottom: 8 }}
+              onClick={() => setShowCreateSubject(true)}
+            >
+              <FaPlus style={{ marginRight: 8 }} /> Create Subject
+            </button>
             <Link to="/teacher/upload-questions" className={pathname.includes('/teacher/upload-questions') ? 'active' : ''}>
               <FaFileUpload /> <span>Upload Questions</span>
             </Link>

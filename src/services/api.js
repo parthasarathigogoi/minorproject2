@@ -100,6 +100,14 @@ export const questionApi = {
   getExamResultById: async (examId) => {
     return fetchWithAuth(`exams/results/${examId}`);
   },
+  
+  // Create a question (teacher only)
+  createQuestion: async (questionData) => {
+    return fetchWithAuth('questions', {
+      method: 'POST',
+      body: JSON.stringify(questionData),
+    });
+  },
 };
 
 // Practice Test API calls

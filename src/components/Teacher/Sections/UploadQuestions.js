@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { FaUpload, FaPlus, FaTrash, FaCheckCircle, FaImage, FaFilter, FaEye, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import '../../../styles/UploadQuestions.css';
+import { questionApi } from '../../../services/api';
 
-const UploadQuestions = ({ classSection, subjects }) => {
+const UploadQuestions = ({ classSection, subjects, subjectId }) => {
   const [question, setQuestion] = useState({
     text: '',
     type: 'multiple_choice',
     subject: '',
     marks: 1,
-    topic: '',
     options: ['', ''],
     correctAnswer: '',
     difficultyLevel: 'medium',
@@ -63,10 +63,13 @@ const UploadQuestions = ({ classSection, subjects }) => {
       }
     };
     
-    if (subjects.length > 0) {
+    if (subjectId) {
+      setQuestion(prev => ({ ...prev, subject: subjectId }));
+      setSubjectOptions([]); // Hide subject dropdown
+    } else if (subjects && subjects.length > 0) {
       fetchSubjectDetails();
     }
-  }, [subjects, question.subject]);
+  }, [subjects, question.subject, subjectId]);
   
   // Handle input changes
   const handleChange = (e) => {
@@ -136,7 +139,6 @@ const UploadQuestions = ({ classSection, subjects }) => {
       type: 'multiple_choice',
       subject: subjectOptions.length > 0 ? subjectOptions[0].id : '',
       marks: 1,
-      topic: '',
       options: ['', ''],
       correctAnswer: '',
       difficultyLevel: 'medium',
@@ -147,33 +149,33 @@ const UploadQuestions = ({ classSection, subjects }) => {
   };
   
   // Save question
-  const saveQuestion = () => {
+  const saveQuestion = async () => {
     // Validate question data
-    if (!question.text || !question.subject || !question.topic) {
+    if (!question.text || !(subjectId || question.subject)) {
       alert('Please fill all required fields');
       return;
     }
-    
     if (question.type === 'multiple_choice' && !question.correctAnswer) {
       alert('Please select the correct answer for multiple choice question');
       return;
     }
-    
-    // Generate unique ID
-    const newQuestion = {
-      ...question,
-      id: Date.now().toString(),
-      createdAt: new Date()
-    };
-    
-    // In a real app, this would be an API call to save the question
-    setSavedQuestions(prev => [newQuestion, ...prev]);
-    
-    // Reset form for next question
-    resetForm();
-    
-    // Show success message
-    alert('Question saved successfully!');
+    try {
+      // Send to backend
+      const payload = {
+        ...question,
+        subject: subjectId || question.subject,
+        classSection: classSection,
+        options: question.options,
+        image: question.image,
+      };
+      // Remove topic from payload if present
+      delete payload.topic;
+      await questionApi.createQuestion(payload);
+      alert('Question saved successfully!');
+      resetForm();
+    } catch (err) {
+      alert('Failed to save question: ' + err.message);
+    }
   };
   
   // Apply filters to questions
@@ -240,34 +242,21 @@ const UploadQuestions = ({ classSection, subjects }) => {
             <div className="form-row">
               <div className="form-group">
                 <label>Subject <span className="required">*</span></label>
-                <select 
-                  name="subject" 
-                  value={question.subject} 
-                  onChange={handleChange}
-                  className="form-control"
-                >
-                  <option value="">-- Select Subject --</option>
-                  {subjectOptions.map(subject => (
-                    <option key={subject.id} value={subject.id}>
-                      {subject.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              <div className="form-group">
-                <label>Topic/Chapter <span className="required">*</span></label>
-                <select 
-                  name="topic" 
-                  value={question.topic} 
-                  onChange={handleChange}
-                  className="form-control"
-                >
-                  <option value="">-- Select Topic --</option>
-                  {topics.map((topic, index) => (
-                    <option key={index} value={topic}>{topic}</option>
-                  ))}
-                </select>
+                {subjectOptions.length > 0 && (
+                  <select 
+                    name="subject" 
+                    value={question.subject} 
+                    onChange={handleChange}
+                    className="form-control"
+                  >
+                    <option value="">-- Select Subject --</option>
+                    {subjectOptions.map(subject => (
+                      <option key={subject.id} value={subject.id}>
+                        {subject.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
               </div>
             </div>
             
@@ -460,7 +449,7 @@ const UploadQuestions = ({ classSection, subjects }) => {
             </div>
             
             <div className="preview-subject">
-              {subjectOptions.find(s => s.id === question.subject)?.name || ''} • {question.topic}
+              {subjectOptions.find(s => s.id === question.subject)?.name || ''}
             </div>
             
             <div className="preview-question-text">
@@ -637,7 +626,7 @@ const UploadQuestions = ({ classSection, subjects }) => {
                 
                 <div className="question-footer">
                   <span className="subject-topic">
-                    {subjectOptions.find(s => s.id === q.subject)?.name || ''} • {q.topic}
+                    {subjectOptions.find(s => s.id === q.subject)?.name || ''}
                   </span>
                   <span className="created-at">
                     {new Date(q.createdAt).toLocaleDateString()}
